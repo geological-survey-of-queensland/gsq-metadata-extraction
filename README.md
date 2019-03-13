@@ -68,7 +68,7 @@ Collection of relevant papers and information
 
 | Information | Type | URL |
 |-------------|------|-----|
-|  |  |  |
+| Linguistic modeling example | Blog Post | https://towardsdatascience.com/deep-learning-for-specific-information-extraction-from-unstructured-texts-12c5b9dceada |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -95,3 +95,28 @@ Collection of relevant papers and information
 | convolutional NN |  | Convulution does not apply to text based data |
 
 ~~In conclusion we will initially attempt to implement and test a Deep Rrecurrent Neural Network (DRNN) and possibly compare it to RNN and DNN implementation depending on performance results.~~
+
+## Abbrviations
+---
+
+| Abbrviation | Meaning |
+|-------------|---------|
+| ML | Machine learning |
+| TF | Tensorflow |
+| NN | Neural network |
+| RNN | Recurrent nural network |
+| DNN | Deep Neural Network | 
+| DRNN | Deep Recurrent Neural Networks |
+| LSTM | Long short term memory |
+|  |  |
+|  |  |
+|  |  |
+|  |  |
+
+## Definitions
+---
+
+| Word / Phrase | Meaning |
+|---------------|---------|
+| Temporal inputs / data | data through out time (not single isntance), often of varying size |
+|  |  |
