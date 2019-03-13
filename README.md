@@ -40,3 +40,23 @@ Year: 2012
 Dimensionality: 3D
 Releated to type: SEGY
 Project name: Farewell
+
+## Research
+---
+
+### Tensorflow
+Tensorflow (TF) provides all the machine learning (ML) functionality and is a widely used scalable ML tool kit. Thus TF will be used for this project.
+
+The ML process will generate and improve in an itterative process a model that can be used to predict metadata from new file path inputs. Note that the once a prediction has been made, it can be confirmed or corrected by a human and this response can be fed back into the ML process to improve the models accuracy.
+
+### Recurrent Neural Networks (RNN)
+
+The RNN will be able to process input of varying lengths, thus rather than feeding the entire path at once its fed character by character. The RNN will utilise Long Short Term Memory (LSTM) to process the entire path character by character and continously output information discovered at that stage.
+
+Unlike regualr Neural Neworks (NN) which process each input seperately, RNN feeds data from the previous steps (previous characters processed) into the current computation.
+
+### Deep Neural Network (DNN)
+
+Likly This Network will become a Deep Neural Newtork (DNN) which means it has more than one hidden layer. Note that the NN can be both recurrent (RNN) and deep (DNN).
+
+DNN are known for better processing of more complex data and thus is likly to increase model accuracy. Similarily to RNN DNN are more complex than regular NN.
