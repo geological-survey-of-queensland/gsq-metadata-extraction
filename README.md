@@ -38,6 +38,8 @@ Dimensionality: 3D
 Releated to type: SEGY
 Project name: Farewell
 
+Exact representation in NN to be determinded.
+
 ## Research
 
 ### Tensorflow
@@ -111,8 +113,9 @@ At this stage no actual testing data exists and a small set will need to be crea
 | ML | Machine learning |
 | TF | Tensorflow |
 | NN | Neural network |
-| RNN | Recurrent nural network |
+| RNN | Recurrent Neural network |
 | DNN | Deep Neural Network | 
+| CNN | Convolutional Neural Network |
 | DRNN | Deep Recurrent Neural Networks |
 | LSTM | Long short term memory |
 |  |  |
@@ -124,5 +127,5 @@ At this stage no actual testing data exists and a small set will need to be crea
 
 | Word / Phrase | Meaning |
 |---------------|---------|
-| Temporal inputs / data | data through out time (not single isntance), often of varying size |
+| Temporal inputs / data | data through out time (not single instance), often of varying size |
 |  |  |
