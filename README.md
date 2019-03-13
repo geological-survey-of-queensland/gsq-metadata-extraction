@@ -80,16 +80,16 @@ Collection of relevant papers and information
 | RNN      | Tempral data                | More complex |
 |          | Variable input, output size | Harder to train |
 |          | Known for better accuracy   | good at predicting how the input might continue (not what we want) |
-|
+| | | |
 | DNN      | Better accuracy for complex data | More complex |
 |          | Better incoorporates past inputs | Slightly slower |
-|
+| | | |
 | LSTM     | Variable input, output size  | Very complex |
 |          | Known for very good accuracy | Slower |
-|
+| | | |
 | plain NN | Very fast to train | Likly less accurate |
 |          | Simpler model      | fixed input, output size |
-|
+| | | |
 | convolutional NN |  | Convulution does not apply to text based data |
 
 ~~In conclusion we will initially attempt to implement and test a Deep Rrecurrent Neural Network (DRNN) and possibly compare it to RNN and DNN implementation depending on performance results.~~
