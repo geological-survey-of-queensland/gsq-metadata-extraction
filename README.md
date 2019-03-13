@@ -1,12 +1,10 @@
 # Meta data extraction from filepath
 
 ## Aim
----
 
 Aim is to utilise machine learning (ML) to generate, train and improve a model (Nerual Network) to process filepaths and extract labled metadata such as project date-time, dimensionality, projetc name and/or other meta data that may or may not be part of the path.
 
 ## Problem Statement
----
 
 Input: varying length file path, ie "/projectname/samples/sample1/sumary 03-08.pdf"
 
@@ -15,7 +13,6 @@ Output: varying number of metadata tags, ie Project name, Date Completed, Type
 Formal problem: sequence to sequence translation
 
 ## Approach
----
 
 1. Unsupervised learning: learn to segment and cluster similar parts. ie find dates and years but (Very hard)
 2. Create supervised learnign data (input and lables)
@@ -42,7 +39,6 @@ Releated to type: SEGY
 Project name: Farewell
 
 ## Research
----
 
 ### Tensorflow
 Tensorflow (TF) provides all the machine learning (ML) functionality and is a widely used scalable ML tool kit. Thus TF will be used for this project.
@@ -101,17 +97,14 @@ Collection of relevant papers and information
 Below are the network structures tested ordered newest (top) to oldest (bottom). In depth analysis of the structures is found in Testing and Progress
 
 ## Testing Data
----
 
 For training data a reseanoble data set has to be created. This may require a significant amount of human work. More data is likley to yield better.
 
 At this stage no actual testing data exists and a small set will need to be created.
 
 ## Experimentation, Testing and Progress
----
 
 ## Abbrviations
----
 
 | Abbrviation | Meaning |
 |-------------|---------|
@@ -128,7 +121,6 @@ At this stage no actual testing data exists and a small set will need to be crea
 |  |  |
 
 ## Definitions
----
 
 | Word / Phrase | Meaning |
 |---------------|---------|
