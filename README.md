@@ -12,6 +12,16 @@ Input: varying length file path, ie "/projectname/samples/sample1/sumary 03-08.p
 
 Output: varying number of metadata tags, ie Project name, Date Completed, Type
 
+Formal problem: sequence to sequence translation
+
+## Approach
+---
+
+1. Unsupervised learning: learn to segment and cluster similar parts. ie find dates and years but (Very hard)
+2. Create supervised learnign data (input and lables)
+3. Supervised learning: associate previously learned clusters of information with real lables/metadata lables
+4. Provide feedback on new data to improve model
+
 ### Inputs
 
 input will be the filepaths, from it we want to extract labled metadata. the data may occur in different formats and locations with in the path.
