@@ -69,7 +69,7 @@ Collection of relevant papers and information
 | Information | Type | URL |
 |-------------|------|-----|
 | Linguistic modeling example | Blog Post | https://towardsdatascience.com/deep-learning-for-specific-information-extraction-from-unstructured-texts-12c5b9dceada |
-|  |  |  |
+| Debugging NN | Blog Post | https://blog.slavv.com/37-reasons-why-your-neural-network-is-not-working-4020854bd607 |
 |  |  |  |
 |  |  |  |
 
@@ -95,6 +95,20 @@ Collection of relevant papers and information
 | convolutional NN |  | Convulution does not apply to text based data |
 
 ~~In conclusion we will initially attempt to implement and test a Deep Rrecurrent Neural Network (DRNN) and possibly compare it to RNN and DNN implementation depending on performance results.~~
+
+### Network Structure
+
+Below are the network structures tested ordered newest (top) to oldest (bottom). In depth analysis of the structures is found in Testing and Progress
+
+## Testing Data
+---
+
+For training data a reseanoble data set has to be created. This may require a significant amount of human work. More data is likley to yield better.
+
+At this stage no actual testing data exists and a small set will need to be created.
+
+## Experimentation, Testing and Progress
+---
 
 ## Abbrviations
 ---
