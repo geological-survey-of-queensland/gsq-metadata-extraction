@@ -27,6 +27,8 @@ Data type: String
 
 ### Outputs
 
+#### Somehow return relevant found lable & data pairs
+
 Outputs may be lables with the position of the corresponding string in the path. We may require to train for it to returm the relevant data position rather than the data itself to allow for unsupervised learning to takeplace.
 
 Example desired results for 
@@ -38,7 +40,18 @@ Dimensionality: 3D
 Releated to type: SEGY
 Project name: Farewell
 
+Not know how to retrieve data in this format.
 Exact representation in NN to be determinded.
+
+#### Input with path a query to get result for desired data
+
+For example input the path as well as a 'date finalised' token/query. 
+Possible ways of returning the data are:
+
+- plain text data
+- confidence map indicating which characters are part of the data
+
+This method will require a path to be tested against all lables individually that might be of interest.
 
 ## Research
 
