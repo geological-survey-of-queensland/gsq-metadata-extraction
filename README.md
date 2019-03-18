@@ -27,9 +27,7 @@ Data type: String
 
 ### Outputs
 
-#### Somehow return relevant found lable & data pairs
-
-Outputs may be lables with the position of the corresponding string in the path. We may require to train for it to returm the relevant data position rather than the data itself to allow for unsupervised learning to takeplace.
+#### Return relevant lable & data pairs
 
 Example desired results for 
 "\\nas02\gsq\ram\FinalSpectrumData\QDEX_Data\3D_Surveys\Processed_And_Support_Data\2010\95287_FARAWELL_3D_2012\SEGY\FARAWELL_3D_MIGRATED_DMO_STACK_SMOOTH_FXY_DECON_SDU10548TA_243006.SGY":
@@ -45,10 +43,13 @@ Project name: Farewell
 
 Use tokens to indicate start and possibly end of data of specific types.
 Example output from above where [lable name] denotes the start of a labled data item:
-"[Subject] Survey [Year] 2012 [Dimensionality] 3D [Releated to type] SEGY [Project name] Farewell" 
+
+- Start token only: "[Subject] Survey [Year] 2012 [Dimensionality] 3D [Releated to type] SEGY [Project name] Farewell" 
+
 Or alternatively use end of data token where the token can either clsoe a specified lable or be general.
-General closing token: "[Subject] Survey [End] [Year] ..."
-Specific closing token: "[Subject] Survey [End Subject] [Year] ..."
+
+- General closing token: "[Subject] Survey [End] [Year] ..."
+- Specific closing token: "[Subject] Survey [End Subject] [Year] ..."
 
 #### Input with path a query to get result for desired data
 
