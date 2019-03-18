@@ -1,3 +1,10 @@
+"""
+
+Usage:
+list.py "folder_path_to_earch"
+
+"""
+
 import sys, os
 
 root = sys.argv[1]
