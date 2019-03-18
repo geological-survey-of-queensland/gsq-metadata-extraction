@@ -40,8 +40,15 @@ Dimensionality: 3D
 Releated to type: SEGY
 Project name: Farewell
 
-Not know how to retrieve data in this format.
-Exact representation in NN to be determinded.
+~~Not know how to retrieve data in this format.~~
+~~Exact representation in NN to be determinded.~~
+
+Use tokens to indicate start and possibly end of data of specific types.
+Example output from above where [lable name] denotes the start of a labled data item:
+"[Subject] Survey [Year] 2012 [Dimensionality] 3D [Releated to type] SEGY [Project name] Farewell" 
+Or alternatively use end of data token where the token can either clsoe a specified lable or be general.
+General closing token: "[Subject] Survey [End] [Year] ..."
+Specific closing token: "[Subject] Survey [End Subject] [Year] ..."
 
 #### Input with path a query to get result for desired data
 
