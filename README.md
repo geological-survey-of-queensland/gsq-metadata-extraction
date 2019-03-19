@@ -1,16 +1,49 @@
-# Meta data extraction from filepath
+# Metadata extraction and generation
 
 ## Aim
 
 Aim is to utilise machine learning (ML) to generate, train and improve a model (Nerual Network) to process filepaths and extract labled metadata such as project date-time, dimensionality, projetc name and/or other meta data that may or may not be part of the path.
 
+## Subprojects
+
+- Filepath metadata extraction: extract different metadata from the file path of each file. (Current)
+- Document metadata extraction: extract different metadata from coduments such as pdf reports.
+- Hierarchical analysis and metadata sharing: copy metadata to related files based on hierachicl structure. 
+
+## Abbrviations
+
+| Abbrviation | Meaning |
+|-------------|---------|
+| ML | Machine learning |
+| TF | Tensorflow |
+| NN | Neural network |
+| RNN | Recurrent Neural network |
+| DNN | Deep Neural Network | 
+| CNN | Convolutional Neural Network |
+| DRNN | Deep Recurrent Neural Networks |
+| LSTM | Long short term memory |
+|  |  |
+
+## Definitions
+
+| Word / Phrase | Meaning |
+|---------------|---------|
+| Temporal inputs / data | data through out time (not single instance), often of varying size |
+|  |  |
+
+
+
+# Filepath metadata extraction
+
 ## Problem Statement
 
-Input: varying length file path, ie "/projectname/samples/sample1/sumary 03-08.pdf"
+Extract metadata from filepaths as relevant information is often found in the file and folder names. The goal is to use sequence to sequence translation optimised neural network structures and processes.
 
-Output: varying number of metadata tags, ie Project name, Date Completed, Type
-
-Formal problem: sequence to sequence translation
+| | |
+|-|-|
+| Input | varying length file path, ie "/projectname/samples/sample1/sumary 03-08.pdf" |
+| Output | varying number of metadata tags, ie Project name, Date Completed, Type |
+| Formal problem | sequence to sequence translation |
 
 ## Approach
 
@@ -127,26 +160,14 @@ At this stage no actual testing data exists and a small set will need to be crea
 
 ## Experimentation, Testing and Progress
 
-## Abbrviations
 
-| Abbrviation | Meaning |
-|-------------|---------|
-| ML | Machine learning |
-| TF | Tensorflow |
-| NN | Neural network |
-| RNN | Recurrent Neural network |
-| DNN | Deep Neural Network | 
-| CNN | Convolutional Neural Network |
-| DRNN | Deep Recurrent Neural Networks |
-| LSTM | Long short term memory |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
 
-## Definitions
+# Document metadata extraction
 
-| Word / Phrase | Meaning |
-|---------------|---------|
-| Temporal inputs / data | data through out time (not single instance), often of varying size |
-|  |  |
+## Problem statement
+
+
+
+# Hierarchical analysis and metadata sharing
+
+## Problem statement
