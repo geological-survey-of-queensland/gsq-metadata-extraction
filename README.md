@@ -2,13 +2,13 @@
 
 ## Aim
 
-Aim is to utilise machine learning (ML) to generate, train and improve a model (Nerual Network) to process filepaths and extract labled metadata such as project date-time, dimensionality, projetc name and/or other meta data that may or may not be part of the path.
+Aim is to utilise machine learning (ML) to extract and generate metadata from the existing files by creating, training and improving a model (Nerual Network) to process currently existing files and the filestructures to extract labled metadata such as project date-time, dimensionality, projetc name and/or other metadata.
 
 ## Subprojects
 
 - Filepath metadata extraction: extract different metadata from the file path of each file. (Current)
 - Document metadata extraction: extract different metadata from coduments such as pdf reports.
-- Hierarchical analysis and metadata sharing: copy metadata to related files based on hierachicl structure. 
+- Hierarchical analysis and metadata sharing: copy metadata to related files based on hierachicl structure.
 
 ## Abbrviations
 
@@ -37,7 +37,7 @@ Aim is to utilise machine learning (ML) to generate, train and improve a model (
 
 ## Problem Statement
 
-Extract metadata from filepaths as relevant information is often found in the file and folder names. The goal is to use sequence to sequence translation optimised neural network structures and processes.
+Extract metadata from filepaths as relevant information is often found in the file and folder names.
 
 | | |
 |-|-|
@@ -47,18 +47,26 @@ Extract metadata from filepaths as relevant information is often found in the fi
 
 ## Approach
 
-1. Unsupervised learning: learn to segment and cluster similar parts. ie find dates and years but (Very hard)
+1. Unsupervised learning: learn to segment and cluster similar parts. ie find dates and years (Very hard)
 2. Create supervised learnign data (input and lables)
 3. Supervised learning: associate previously learned clusters of information with real lables/metadata lables
 4. Provide feedback on new data to improve model
 
 ### Inputs
 
-input will be the filepaths, from it we want to extract labled metadata. the data may occur in different formats and locations with in the path.
+Input will be the filepaths, from it we want to extract labled metadata. the data may occur in different formats and locations with in the path. Internally teh path (string) needs to be converted into a NN compatible vector.
 
-Data type: String
+System input data type: String
+NN input data type: Vector (int) (where each field represents a character)
 
 ### Outputs
+
+The NN will return a variable length Vector (int) where each field represents a character or token with special meaning.
+
+| Token name | Meaning |
+|------------|---------|
+| <START>    | start of output |
+| <START TAG> | start of a tag |
 
 #### Return relevant lable & data pairs
 
