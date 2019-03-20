@@ -1,0 +1,2 @@
+model_checkpoint_path: "en-fr.ckpt"
+all_model_checkpoint_paths: "en-fr.ckpt"
