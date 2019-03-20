@@ -17,21 +17,28 @@ Extract metadata from filepaths as relevant information is often found in the fi
 3. Supervised learning: associate previously learned clusters of information with real lables/metadata lables
 4. Provide feedback on new data to improve model
 
+### Unsupervised learning
+
+An autoencoder can be used to train an encoder to produce a compressed vector of the 
+
 ### Inputs
 
 Input will be the filepaths, from it we want to extract labled metadata. the data may occur in different formats and locations with in the path. Internally teh path (string) needs to be converted into a NN compatible vector.
 
 System input data type: String
-NN input data type: Vector (int) (where each field represents a character)
+NN input data type: Vector (int) (where each number represents a character)
 
 ### Outputs
 
-The NN will return a variable length Vector (int) where each field represents a character or token with special meaning.
+~~The NN will return a variable length Vector (int) where each field represents a character or token with special meaning.~~
 
 | Token name | Meaning |
 |------------|---------|
-| <START>    | start of output |
-| <START TAG> | start of a tag |
+| START     | start of output |
+| NAME      | start of a tag name |
+| TAG       | start of a tag content |
+| EOT       | end of a tag content |
+| EOS       | end of output |
 
 #### Return relevant lable & data pairs
 
@@ -68,58 +75,14 @@ Possible ways of returning the data are:
 This method will require a path to be tested against all lables individually that might be of interest.
 
 ## Research
-
-### Tensorflow
-Tensorflow (TF) provides all the machine learning (ML) functionality and is a widely used scalable ML tool kit. Thus TF will be used for this project.
-
-The ML process will generate and improve in an itterative process a model that can be used to predict metadata from new file path inputs. Note that the once a prediction has been made, it can be confirmed or corrected by a human and this response can be fed back into the ML process to improve the models accuracy.
-
-### Recurrent Neural Networks (RNN)
-
-The RNN will be able to process input of varying lengths, thus rather than feeding the entire path at once its fed character by character. The RNN will utilise Long Short Term Memory (LSTM) to process the entire path character by character and continously output information discovered at that stage.
-
-Unlike regualr Neural Neworks (NN) which process each input seperately, RNN feeds data from the previous steps (previous characters processed) into the current computation.
-
-### Deep Neural Network (DNN)
-
-Likly This Network will become a Deep Neural Newtork (DNN) which means it has more than one hidden layer. Note that the NN can be both recurrent (RNN) and deep (DNN).
-
-DNN are known for better processing of more complex data and thus is likly to increase model accuracy. Similarily to RNN DNN are more complex than regular NN.
-
-### In Depth Research, Papers and Webpages
-Collection of relevant papers and information
-
-#### Linguistic Modeling
+Collection of relevant papers and information.
 
 | Information | Type | URL |
 |-------------|------|-----|
 | Linguistic modeling example | Blog Post | https://towardsdatascience.com/deep-learning-for-specific-information-extraction-from-unstructured-texts-12c5b9dceada |
 | Debugging NN | Blog Post | https://blog.slavv.com/37-reasons-why-your-neural-network-is-not-working-4020854bd607 |
+| Variational Autoencoders | Video | https://www.youtube.com/watch?v=9zKuYvjFFS8 |
 |  |  |  |
-|  |  |  |
-
-#### LSTM NN
-
-### Advantages different Neural Networks
-
-| Type     | Advantage | Disatvantage |
-|----------|-----------|--------------|
-| RNN      | Tempral data                | More complex |
-|          | Variable input, output size | Harder to train |
-|          | Known for better accuracy   | good at predicting how the input might continue (not what we want) |
-| | | |
-| DNN      | Better accuracy for complex data | More complex |
-|          | Better incoorporates past inputs | Slightly slower |
-| | | |
-| LSTM     | Variable input, output size  | Very complex |
-|          | Known for very good accuracy | Slower |
-| | | |
-| plain NN | Very fast to train | Likly less accurate |
-|          | Simpler model      | fixed input, output size |
-| | | |
-| convolutional NN |  | Convulution does not apply to text based data |
-
-~~In conclusion we will initially attempt to implement and test a Deep Rrecurrent Neural Network (DRNN) and possibly compare it to RNN and DNN implementation depending on performance results.~~
 
 ### Network Structure
 
