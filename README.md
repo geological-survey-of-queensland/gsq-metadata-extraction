@@ -4,15 +4,37 @@
 
 Aim is to utilise machine learning (ML) to extract and generate metadata from the existing files by creating, training and improving a model (Nerual Network) to process currently existing files and the filestructures to extract labled metadata such as project date-time, dimensionality, projetc name and/or other metadata.
 
+Desired attributes are:
+| Attributes |
+| ---------- |
+| SurveyNum	|
+| SurveyName |
+| LineName |
+| SurveyType |
+| PrimaryDataType |
+| SecondaryDataType |
+| TertiaryDataType |
+| Quaternary |
+| File_Range |
+| First_SP_CDP |
+| Last_SP_CDP |
+| CompletionYear |
+| TenureType |
+| Operator Name |
+| GSQBarcode |
+| EnergySource |
+| LookupDOSFilePath |
+| Source Of Data |
+
 ## Subprojects
 
 - Filepath metadata extraction: extract different metadata from the file path of each file. (Current)
 - Document metadata extraction: extract different metadata from coduments such as pdf reports.
 - Hierarchical analysis and metadata sharing: copy metadata to related files based on hierachicl structure.
 
-## Abbrviations
+## Abbreviations
 
-| Abbrviation | Meaning |
+| Abbreviation | Meaning |
 |-------------|---------|
 | ML | Machine learning |
 | TF | Tensorflow |
@@ -28,7 +50,7 @@ Aim is to utilise machine learning (ML) to extract and generate metadata from th
 
 | Word / Phrase | Meaning |
 |---------------|---------|
-| Temporal inputs / data | data through out time (not single instance), often of varying size |
+| Temporal inputs / data | sequencial data, often of varying size |
 |  |  |
 
 ## Research
