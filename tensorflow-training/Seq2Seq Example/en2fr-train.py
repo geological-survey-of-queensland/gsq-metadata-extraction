@@ -39,6 +39,8 @@ def main():
 
     train_graph = tf.Graph()
     with train_graph.as_default():
+
+        # get placeholders
         input_data, targets, target_sequence_length, max_target_sequence_length = enc_dec_model_inputs()
         lr, keep_prob = hyperparam_inputs()
         
@@ -189,6 +191,7 @@ def get_accuracy(target, logits):
     return np.mean(np.equal(target, logits))
 
 
+# generate placeholders
 def enc_dec_model_inputs():
     inputs = tf.placeholder(tf.int32, [None, None], name='input')
     targets = tf.placeholder(tf.int32, [None, None], name='targets') 
