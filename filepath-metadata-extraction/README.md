@@ -32,13 +32,30 @@ NN input data type: Vector (int) (where each number represents a character)
 
 ~~The NN will return a variable length Vector (int) where each field represents a character or token with special meaning.~~
 
-| Token name | Meaning |
-|------------|---------|
-| START     | start of output |
-| NAME      | start of a tag name |
-| TAG       | start of a tag content |
-| EOT       | end of a tag content |
-| EOS       | end of output |
+| Token name        | Meaning |
+|-------------------|---------|
+| Padding           | padding |
+| Go                | start of output  |
+| EndOfString       | end of output    |
+| UnknownChar       | unkown character |
+| SurveyNum	        | metadata |
+| SurveyName        | metadata |
+| LineName          | metadata |
+| SurveyType        | metadata |
+| PrimaryDataType   | metadata |
+| SecondaryDataType | metadata |
+| TertiaryDataType  | metadata |
+| Quaternary        | metadata |
+| File_Range        | metadata |
+| First_SP_CDP      | metadata |
+| Last_SP_CDP       | metadata |
+| CompletionYear    | metadata |
+| TenureType        | metadata |
+| Operator Name     | metadata |
+| GSQBarcode        | metadata |
+| EnergySource      | metadata |
+| LookupDOSFilePath | metadata |
+| Source Of Data    | metadata |
 
 #### Return relevant lable & data pairs
 
