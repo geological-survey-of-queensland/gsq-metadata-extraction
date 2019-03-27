@@ -1,0 +1,21 @@
+\SHUP\2D_Surveys\Processed_And_Support_Data\1980\KINNOUL_BONNIE_DOON\SEGY\KINNOUL_BONNIE_DOON_80H-60_STACK_SDU10912TA_129204.sgy
+
+Unique Record ID:	129204					y
+SurveyNum:		80022					n
+SurveyName:		KINNOUL-BONNIE DOON			y
+LineName:		80H-60					y
+SurveyType:		LAND2D					
+PrimaryDataType:	PROCESSED_SEGY				y
+SecondaryDataType:	STACK					y
+TertiaryDataType:	STACK					y
+Quaternary:		FINAL					n
+File_Range:							
+First_SP_CDP:							
+Last_SP_CDP:							
+CompletionYear:		1980					n
+TenureType:		EPP					n
+Operator Name:		HOUSTON OIL AND MINERALS LTD INC	n
+GSQBarcode:		SDU10912TA				y
+EnergySource:		DYNAMITE SOURCE				n
+Source Of Data:		INDUSTRY				
+
