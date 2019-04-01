@@ -10,6 +10,7 @@ tokens = ['<Padding>', '<Go>', '<EndOfString>', '<UnknownChar>', '<SurveyNum>', 
 # get set of characters to be used, use static preset list of characters
 # TODO use all characters from entire training set?
 available_chars = list(" ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890-_().,\\/\"':&")
+char_count = len(available_chars)
 
 # generate character to int and int to character maps
 char_to_int = {c: i for i, c in enumerate(tokens + available_chars)}
@@ -17,18 +18,20 @@ int_to_char = {i: c for c, i in char_to_int.items()}
 
 
 
-# main program to perform all of preprocessing
 def main():
+    """main program to perform all of preprocessing"""
+
     data = process_training_data('SHUP 2D Files Training Data.csv')
     encoded_data = encode_training_data(data)
+    padded_data = {c: convert_to_unitform_matrix(encoded_data[]) for c in encoded_data.columns.values}
 
     encoded_data.to_csv('training_data.csv', index=False)
     pickle.dump((encoded_data), open('training_data.p', 'wb'))
 
 
 
-# clean up data to remove and change some key sapects
 def process_training_data(raw_source_file):
+    """clean up data to remove and change some key sapects"""
 
     # read raw training data
     data = pd.read_csv(raw_source_file, dtype=str)
@@ -62,8 +65,9 @@ def process_training_data(raw_source_file):
 
 
 
-# encode all data using global encoding dictionaries/lookup tables
 def encode_training_data(data):
+    """encode all data using global encoding dictionaries/lookup tables"""
+
     encoded_data = pd.DataFrame()
 
     # take each column from old data and create a new column with content where each string entry is encoded
@@ -78,8 +82,9 @@ def encode_training_data(data):
 
 
 
-# convert a string in to a list of ints
 def encode(string):
+    """convert a string in to a list of ints"""
+
     try:
         return [char_to_int[char] for char in string]
     except:
@@ -88,18 +93,56 @@ def encode(string):
 
 
 
-# convert a list if ints into a string
 def decode(vector):
+    """convert a list if ints into a string"""
+
     ''.join(int_to_char[i] for i in vector)
 
 
 
-# load a processed pickle file
 def load(filename):
+    """load a processed pickle file"""
+
     with open(filename, 'rb') as f:
         return pickle.load(f)
 
     return None
+
+
+
+def train_test_split(data, test_frac=0.2, shuffle_before=False, shuffle_after=False):
+    """split dataset into train and test and optionally shuffle"""
+
+    if shuffle_before:
+        data = data.sample(frac=1)
+
+    test = data.head(int(len(data)*test_frac))
+    train = data.tail(int(len(data)*(1-test_frac)))
+
+    if shuffle_after:
+        test = test.sample(frac=1)
+        train = train.sample(frac=1)
+
+    return train, test
+        
+
+def convert_to_unitform_matrix(data, pad_token):
+    """for each column create a matrix wide enough to fit all samples and fill with teh padding token"""
+
+    height = len(data)
+    width = max([len(l) for l in data[column]])
+
+    padded_data = np.full((height, width), pad_token, np.int32)
+
+    for i in len(data):
+        row = data.loc[i]
+        length = len(row)
+        padded_data[:length] = row
+
+    return padded_data
+        
+
+
 
 
 if __name__ == "__main__": main()
