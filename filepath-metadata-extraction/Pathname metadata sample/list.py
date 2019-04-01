@@ -1,7 +1,7 @@
 """
 
 Usage:
-list.py "folder_path_to_earch"
+list.py "folder_path_to_search"
 
 """
 
