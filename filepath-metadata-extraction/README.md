@@ -8,7 +8,7 @@ Extract metadata from filepaths as relevant information is often found in the fi
 |-|-|
 | Input | varying length file path, ie "/projectname/samples/sample1/sumary 03-08.pdf" |
 | Output | varying number of metadata tags, ie Project name, Date Completed, Type |
-| Formal problem | sequence to sequence translation |
+| Formal problem | sequence to bag of words translatio ~~sequence to sequence translation~~ |
 
 ## Approach
 
