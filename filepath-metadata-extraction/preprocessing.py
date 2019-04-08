@@ -22,8 +22,8 @@ def main():
     """main program to perform all of preprocessing"""
 
     data = process_training_data('SHUP 2D Files Training Data.csv')
-    vectorized_data = vectorize_training_data(data)
-    padded_data = pad_vector_data(vectorized_data, char_to_int['<Padding>'])
+    vectorized_data = {f: vectorize_data(data[f]) for f in data}
+    padded_data = {f: pad_vector_data(vectorized_data[f], char_to_int['<Padding>']) for f in vectorized_data}
 
     pickle.dump((padded_data), open('training_data.p', 'wb'))
 
@@ -60,31 +60,33 @@ def process_training_data(raw_source_file):
     print('Final structure')
     print(data.head())
 
-    return data
+    dictionary = {feature:data[feature].values for feature in data.columns.values}
+
+    return dictionary
 
 
 
-def vectorize_training_data(data):
+def vectorize_data(data):
     """vectorize all data using global encoding dictionaries/lookup tables and store variable length vectors"""
 
-    vectorized_data = {}
-
-    # take each column from old data and create a new column with content where each string entry is encoded
-    for feature in data.columns.values:
-        vectorized_data[feature] = [vectorize_string(s) if type(s)==str else [] for s in data[feature]]
-
-    return vectorized_data
+    return [vectorize_string(s) if type(s)==str else [] for s in data]
 
 
 
 def vectorize_string(string):
-    """convert a string in to a vector"""
+    """convert a string into a vector"""
 
     try:
         return [char_to_int[char] for char in string]
     except:
         print('error:', string, type(string))
         return []
+
+
+def decode_data(data):
+    """convert a list of vectors into a list of strings"""
+
+    return [decode(v) for v in data]
 
 
 
@@ -129,25 +131,18 @@ def train_test_split(*data, test_frac=0.2, shuffle_before=False, shuffle_after=F
     return train, test
         
 
-def pad_vector_data(data, pad_token):
-    """for each feature create a matrix wide enough to fit all samples and fill with the padding token"""
+def pad_vector_data(data, pad_token, width=None):
+    """create a matrix wide enough to fit all samples and fill with the padding token"""
 
-    padded_data = {}
+    height = len(data)
+    width = width or max([len(v) for v in data])
 
-    for feature in data:
-        vector_list = data[feature]
+    matrix = np.full((height, width), pad_token, np.int32)
 
-        height = len(vector_list)
-        width = max([len(v) for v in vector_list])
+    for i, v in enumerate(data):
+        matrix[i, :len(v)] = v
 
-        matrix = np.full((height, width), pad_token, np.int32)
-
-        for i, v in enumerate(vector_list):
-            matrix[i, :len(v)] = v
-
-        padded_data[feature] = matrix
-
-    return padded_data
+    return matrix
         
 
 
