@@ -93,7 +93,7 @@ def decode_data(data):
 def decode(vector):
     """convert a vector into a string"""
 
-    ''.join(int_to_char[i] for i in vector)
+    return ''.join([int_to_char[int(i)] for i in vector])
 
 
 
