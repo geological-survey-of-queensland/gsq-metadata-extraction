@@ -99,6 +99,7 @@ Collection of relevant papers and information.
 | Linguistic modeling example | Blog Post | https://towardsdatascience.com/deep-learning-for-specific-information-extraction-from-unstructured-texts-12c5b9dceada |
 | Debugging NN | Blog Post | https://blog.slavv.com/37-reasons-why-your-neural-network-is-not-working-4020854bd607 |
 | Variational Autoencoders | Video | https://www.youtube.com/watch?v=9zKuYvjFFS8 |
+| Types of NN | Blog Post | https://towardsdatascience.com/the-mostly-complete-chart-of-neural-networks-explained-3fb6f2367464 |
 |  |  |  |
 
 ### Network Structure
