@@ -18,9 +18,9 @@ def main():
     print(train_x.shape, train_y.shape, test_x.shape, test_y.shape)
 
     # one hot encode output because the model cant do that for some reason
-    train_x = keras.utils.to_categorical(train_x[:500], voc_size)
+    train_x = keras.utils.to_categorical(train_x[:1000], voc_size)
     test_x = keras.utils.to_categorical(test_x, voc_size)
-    train_y = keras.utils.to_categorical(train_y[:500], voc_size)
+    train_y = keras.utils.to_categorical(train_y[:1000], voc_size)
     test_y = keras.utils.to_categorical(test_y, voc_size)
 
     x_shape = [*train_x.shape]
@@ -35,26 +35,28 @@ def main():
 
     train_x = train_x.reshape(train_x.shape[0], train_x.shape[1] * train_x.shape[2])
     test_x = test_x.reshape(test_x.shape[0], test_x.shape[1] * test_x.shape[2])
-    #train_y = train_y.reshape(train_y.shape[0], train_y.shape[1] * train_y.shape[2])
-    #test_y = test_y.reshape(test_y.shape[0], test_y.shape[1] * test_y.shape[2])
+    train_y = train_y.reshape(train_y.shape[0], train_y.shape[1] * train_y.shape[2])
+    test_y = test_y.reshape(test_y.shape[0], test_y.shape[1] * test_y.shape[2])
 
     print(train_x.shape, train_y.shape, test_x.shape, test_y.shape)
 
     # create model
-    #inputs = [keras.Input(shape=(x_shape_ones,), name=f'li{i}') for i in range(x_shape_char)]
-    #li = keras.layers.concatenate(inputs)
     li = keras.Input(shape=(x_shape_char*x_shape_ones,), name='li')
     lh1 = keras.layers.Dense(x_shape_char*x_shape_ones, activation='sigmoid', name='lh1')(li)
     lh2 = keras.layers.Dense(y_shape_char*y_shape_ones, activation='sigmoid', name='lh2')(lh1)
-    lo = [keras.layers.Dense(y_shape_ones, activation='sigmoid', name=f'lo{i}')(lh2) for i in range(y_shape_char)]
+    lo = keras.layers.Dense(y_shape_char*y_shape_ones, activation='sigmoid', name='lo')(lh2)
 
     model = keras.Model(inputs=li, outputs=lo)
     print(model.summary())
-    model.compile(optimizer='rmsprop', loss=y_shape_char*['categorical_crossentropy'], metrics=['categorical_accuracy'])
+
+    # top_k_accuracy = lambda y_true, y_pred: keras.metrics.top_k_categorical_accuracy(y_true, y_pred, k=y_shape_char)
+    def top_k_accuracy(y_true, y_pred):
+        return keras.metrics.top_k_categorical_accuracy(y_true, y_pred, k=y_shape_char)
+
+    model.compile(optimizer='adam', loss='cosine_proximity', metrics=[top_k_accuracy])
     
-    #model.fit([train_x[:,i,:] for i in range(x_shape_char)], [train_y[:,i,:] for i in range(y_shape_char)], epochs=1)
-    model.fit(train_x, [train_y[:,i,:] for i in range(y_shape_char)], epochs=1)
-    #loss_metric = model.evaluate(test_x, [test_y[:,i,:] for i in range(y_shape_char)])
+    model.fit(train_x, train_y, epochs=1)
+    #loss_metric = model.evaluate(test_x, train_y)
     #print(loss_metric)
     
     #model = keras.Sequential()
@@ -101,58 +103,22 @@ def main():
             y_vector = pp.vectorize_data(y_strings)
             y_padded = pp.pad_vector_data(y_vector, pp.char_to_int['<Padding>'], width=y_shape[1])
             y_one_hot = keras.utils.to_categorical(y_padded, voc_size)
-            #y_one_hot_flat = y_one_hot.reshape(-1, y_one_hot.shape[1] * y_one_hot.shape[2])
+            y_one_hot_flat = y_one_hot.reshape(-1, y_one_hot.shape[1] * y_one_hot.shape[2])
 
         # run
         p_one_hot_flat = model.predict(x_one_hot_flat)
-        #if len(query) > 1:    
-        #    accuracy = model.evaluate(x_one_hot_flat, [y_one_hot[:,i,:] for i in range(y_one_hot.shape[1])])
-        #p_one_hot_flat = model.predict(x_one_hot_flat)
-        #if len(query) > 1:
-        #    accuracy = model.evaluate(x_one_hot_flat, y_one_hot_flat)
+        if len(query) > 1:
+            accuracy = model.evaluate(x_one_hot_flat, y_one_hot_flat)
 
         # decode
-        p_one_hot = np.array(p_one_hot_flat)
-        p_one_hot = np.swapaxes(p_one_hot, 0,1)
+        p_one_hot = p_one_hot_flat.reshape((-1, *y_shape[1:]))
         p_vector = np.argmax(p_one_hot, 2)
         p_strings = pp.decode_data(p_vector)
-        #p_one_hot = p_one_hot_flat.reshape((-1, *y_shape[1:]))
-        #p_vector = np.argmax(p_one_hot, 2)
-        #p_strings = pp.decode_data(p_vector)
 
         # print
         print(p_strings)
-        #if len(query) > 1:
-        #    print(*accuracy)
-
-
-class Batch():
-    """
-    Generate batches for a given dataset of given size.
-    """
-    
-    def __init__(self, data_x, data_y, batch_size):
-        """Initialise the generator with the dataset and batch size"""
-
-        self.data_x = data_x
-        self.data_y = data_y
-        self.batch_size = batch_size
-
-        self.index = 0
-
-    def generate(self):
-        """Generate a batch randomly sampled from the dataset at run time"""
-
-        lower = self.index
-        upper = self.index + self.batch_size
-
-        # if the end is reached, reset
-        if upper >= len(self.data_x):
-            upper = len(self.data_x)
-            self.index = 0
-
-        while True:
-            yield data_x[lower:upper], data_y[lower:upper]
+        if len(query) > 1:
+            print(*accuracy)
 
 
 
