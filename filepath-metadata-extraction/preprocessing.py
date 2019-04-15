@@ -141,7 +141,7 @@ def pad_vector_data(data, pad_token, width=None):
     matrix = np.full((height, width), pad_token, np.int32)
 
     for i, v in enumerate(data):
-        matrix[i, :len(v)] = v
+        matrix[i, :len(v)] = v[:matrix.shape[1]]
 
     return matrix
         
