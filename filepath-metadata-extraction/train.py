@@ -41,12 +41,12 @@ def main():
     print(train_x.shape, train_y.shape, test_x.shape, test_y.shape)
 
     # create model
-    li = keras.Input(shape=(x_shape_char*x_shape_ones,), name='li')
-    lh1 = keras.layers.Dense(x_shape_char*x_shape_ones, activation='sigmoid', name='lh1')(li)
-    lh2 = keras.layers.Dense(y_shape_char*y_shape_ones, activation='sigmoid', name='lh2')(lh1)
-    lo = keras.layers.Dense(y_shape_char*y_shape_ones, activation='sigmoid', name='lo')(lh2)
+    model = keras.Sequential()
+    #model.add(keras.layers.Dense(x_shape_char, 15, activation='softmax'))
+    model.add(keras.layers.Dense(x_shape_char*x_shape_ones, activation='softmax', name='lh1', input_shape=(x_shape_char*x_shape_ones,)))
+    model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='softmax', name='lh2'))
+    model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='softmax', name='lo'))
 
-    model = keras.Model(inputs=li, outputs=lo)
     print(model.summary())
 
     # top_k_accuracy = lambda y_true, y_pred: keras.metrics.top_k_categorical_accuracy(y_true, y_pred, k=y_shape_char)
