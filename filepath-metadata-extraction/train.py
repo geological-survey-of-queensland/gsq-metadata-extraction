@@ -18,9 +18,11 @@ def main():
     print(train_x.shape, train_y.shape, test_x.shape, test_y.shape)
 
     # one hot encode output because the model cant do that for some reason
-    train_x = keras.utils.to_categorical(train_x[:1000], voc_size)
-    test_x = keras.utils.to_categorical(test_x, voc_size)
-    train_y = keras.utils.to_categorical(train_y[:1000], voc_size)
+    #train_x = keras.utils.to_categorical(train_x[:1000], voc_size)
+    #test_x = keras.utils.to_categorical(test_x, voc_size)
+    train_x = train_x[:]
+    
+    train_y = keras.utils.to_categorical(train_y[:], voc_size)
     test_y = keras.utils.to_categorical(test_y, voc_size)
 
     x_shape = [*train_x.shape]
@@ -28,13 +30,13 @@ def main():
     y_shape = [*train_y.shape]
     y_shape[0] = None
 
-    x_shape_char, x_shape_ones = x_shape[1:]
+    [x_shape_char] = x_shape[1:]
     y_shape_char, y_shape_ones = y_shape[1:]
 
     print(train_x.shape, train_y.shape, test_x.shape, test_y.shape)
 
-    train_x = train_x.reshape(train_x.shape[0], train_x.shape[1] * train_x.shape[2])
-    test_x = test_x.reshape(test_x.shape[0], test_x.shape[1] * test_x.shape[2])
+    #train_x = train_x.reshape(train_x.shape[0], train_x.shape[1] * train_x.shape[2])
+    #test_x = test_x.reshape(test_x.shape[0], test_x.shape[1] * test_x.shape[2])
     train_y = train_y.reshape(train_y.shape[0], train_y.shape[1] * train_y.shape[2])
     test_y = test_y.reshape(test_y.shape[0], test_y.shape[1] * test_y.shape[2])
 
@@ -42,8 +44,9 @@ def main():
 
     # create model
     model = keras.Sequential()
-    #model.add(keras.layers.Dense(x_shape_char, 15, activation='softmax'))
-    model.add(keras.layers.Dense(x_shape_char*x_shape_ones, activation='softmax', name='lh1', input_shape=(x_shape_char*x_shape_ones,)))
+    model.add(keras.layers.Embedding(y_shape_ones, 15, name='le', input_length=x_shape_char))
+    model.add(keras.layers.Flatten())
+    model.add(keras.layers.Dense(y_shape_ones*15, activation='softmax', name='lh1'))
     model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='softmax', name='lh2'))
     model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='softmax', name='lo'))
 
@@ -55,32 +58,7 @@ def main():
 
     model.compile(optimizer='adam', loss='cosine_proximity', metrics=[top_k_accuracy])
     
-    model.fit(train_x, train_y, epochs=1)
-    #loss_metric = model.evaluate(test_x, train_y)
-    #print(loss_metric)
-    
-    #model = keras.Sequential()
-    #model.add(keras.layers.Dense(train_y.shape[1], input_shape=[train_x.shape[1]], activation='softmax'))
-    #model.add(keras.layers.Dense(5000, activation='softmax'))
-    #model.add(keras.layers.Embedding(voc_size, voc_size*train_x.shape[1], input_length=train_x.shape[1]))
-    #model.add(keras.layers.LSTM(voc_size, activation='relu', return_sequences=True, input_shape=train_x.shape[:]))
-    #model.add(keras.layers.LSTM(voc_size, activation='relu', return_sequences=False))
-    #model.add(keras.layers.Dropout(0.5))
-    #model.add(keras.layers.TimeDistributed(keras.layers.Dense(voc_size)))
-    #model.add(keras.layers.Dense(train_y.shape[1], activation='softmax'))
-    # model.add(keras.layers.Activation('softmax'))
-
-    # print(model.summary())
-
-    # compile, run and evaluate
-    #optimizer = keras.optimizers.Adam(lr=0.01, decay=0.0001)
-    #model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['binary_accuracy'])
-
-    #print(model.predict(test_x[:1]).shape)
-
-    #model.fit(train_x, train_y, epochs=1)
-    #loss_metric = model.evaluate(test_x, test_y)
-    #print(loss_metric)
+    model.fit(train_x, train_y, epochs=20)
 
 
     while True:
@@ -106,9 +84,9 @@ def main():
             y_one_hot_flat = y_one_hot.reshape(-1, y_one_hot.shape[1] * y_one_hot.shape[2])
 
         # run
-        p_one_hot_flat = model.predict(x_one_hot_flat)
+        p_one_hot_flat = model.predict(x_padded)
         if len(query) > 1:
-            accuracy = model.evaluate(x_one_hot_flat, y_one_hot_flat)
+            accuracy = model.evaluate(x_padded, y_one_hot_flat)
 
         # decode
         p_one_hot = p_one_hot_flat.reshape((-1, *y_shape[1:]))
