@@ -108,8 +108,21 @@ Below are the network structures tested ordered newest (top) to oldest (bottom).
 
 ## Testing Data
 
-For training data a reseanoble data set has to be created. This may require a significant amount of human work. More data is likley to yield better.
+The existing metadata catalogue with close to 24000 samples shoud serve as a good training set.
 
-At this stage no actual testing data exists and a small set will need to be created.
+## Preprocessing
+
+To prepare the data for neural network training it must be converted from the original csv format into one more NN friendly.
+
+Preprocessing steps:
+- Special tokens are defined, these include padding and enf of string.
+- Generate a character to unique int mapping and its inverse.
+- The csv content has been read into a dictionary of lists where the dictionary keys are the metadata attribute names/features and the lists (values) are the entries of the respective columns.
+- Vectorize data by replacing the words with the corresponding int from the mapping.
+- Add padding such that all entries of one feature are equal length.
+- Store as pickle file.
 
 ## Experimentation, Testing and Progress
+
+### DNN
+
