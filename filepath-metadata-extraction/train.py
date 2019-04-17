@@ -6,9 +6,10 @@ import preprocessing as pp
 
 data_file = 'Processed 2D Files Training Data.csv'
 
-x_cut = (slice(None), slice(0,6))
-y_cut = (slice(None), slice(0,6))
-epochs = 5
+x_cut = (slice(None), slice(None))
+y_cut = (slice(None), slice(0,12))
+epochs = 3
+embedding_size = 20
 
 
 def main():
@@ -18,7 +19,9 @@ def main():
     data = pp.load('training_data.p')
 
     # spli data into x and y as well as training and test set
-    (train_x, train_y), (test_x, test_y) = pp.train_test_split(data['LineName'], data['LineName'], test_frac=0.2, shuffle_before=True, shuffle_after=True)
+    # Unique Record ID	FileName	Original_FileName	SurveyNum	SurveyName	LineName	SurveyType	PrimaryDataType	SecondaryDataType	TertiaryDataType	Quaternary	File_Range	First_SP_CDP	Last_SP_CDP	CompletionYear	TenureType	Operator Name	GSQBarcode	EnergySource	LookupDOSFilePath
+
+    (train_x, train_y), (test_x, test_y) = pp.train_test_split(data['LookupDOSFilePath'], data['LineName'], test_frac=0.2, shuffle_before=True, shuffle_after=True)
 
     print(train_x.shape, train_y.shape, test_x.shape, test_y.shape)
 
@@ -48,28 +51,43 @@ def main():
 
     #train_x = train_x.reshape(train_x.shape[0], train_x.shape[1] * train_x.shape[2])
     #test_x = test_x.reshape(test_x.shape[0], test_x.shape[1] * test_x.shape[2])
-    train_y = train_y.reshape(train_y.shape[0], train_y.shape[1] * train_y.shape[2])
-    test_y = test_y.reshape(test_y.shape[0], test_y.shape[1] * test_y.shape[2])
+    #train_y = train_y.reshape(train_y.shape[0], train_y.shape[1] * train_y.shape[2])
+    #test_y = test_y.reshape(test_y.shape[0], test_y.shape[1] * test_y.shape[2])
 
     print(train_x.shape, train_y.shape, test_x.shape, test_y.shape)
 
     # create model
     model = keras.Sequential()
-    model.add(keras.layers.Embedding(y_shape_ones, 50, name='le', input_length=x_shape_char))
-    model.add(keras.layers.Flatten())
-    #model.add(keras.layers.Dense(x_shape_char*10, activation='softmax', name='li'))
-    #model.add(keras.layers.Dense(x_shape_char*10, activation='softmax', name='lh1'))
-    # model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='softmax', name='lh2'))
-    model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='relu', name='lo'))#, input_shape=(x_shape_char*y_shape_ones,)))
 
-    # top_k_accuracy = lambda y_true, y_pred: keras.metrics.top_k_categorical_accuracy(y_true, y_pred, k=y_shape_char)
+    # embed characters into dense embedded space
+    model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))
+    #model.add(keras.layers.Flatten()) # for dense DNN
+
+    model.add(keras.layers.LSTM(y_shape_ones*x_shape_char, activation='exponential', return_sequences=True, name='lr1'))
+    #model.add(keras.layers.Dense(x_shape_char*10, activation='softmax', name='li'))
+    #model.add(keras.layers.Dense(2000, activation='hard_sigmoid', name='lh1'))
+    #model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='softmax', name='lh2'))
+
+    # output layer
+    #model.add(keras.layers.TimeDistributed(keras.layers.Dense(y_shape_char*y_shape_ones, activation='exponential', name='lo')))
+    #model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='exponential', name='lo'))
+    
+    # reshape to one char per output
+    #model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))
+
+    # top k accuracy
     def top_k_accuracy(y_true, y_pred):
         return keras.metrics.top_k_categorical_accuracy(y_true, y_pred, k=y_shape_char)
 
-    model.compile(optimizer='adam', loss='poisson', metrics=[top_k_accuracy, 'binary_accuracy', 'mean_squared_error'])
     print(model.summary())
+
+    # loss poisson mean_squared_logarithmic_error categorical_crossentropy
+    # metrics 
+    model.compile(optimizer='adam', loss='poisson', metrics=['mean_absolute_error', 'categorical_accuracy'])
+    
     
     model.fit(train_x, train_y, epochs=epochs)
+    print('Accuracy:', *model.evaluate(test_x, test_y), sep='\t', end='\n\n\n')
 
 
     while True:
@@ -95,19 +113,20 @@ def main():
             y_one_hot_flat = y_one_hot.reshape(-1, y_one_hot.shape[1] * y_one_hot.shape[2])
 
         # run
-        p_one_hot_flat = model.predict(x_padded)
+        output = []
+        p_one_hot = model.predict(x_padded)
         if len(query) > 1:
-            accuracy = model.evaluate(x_padded, y_one_hot_flat)
+            output += model.evaluate(x_padded, y_one_hot)
+            output += y_strings
 
         # decode
-        p_one_hot = p_one_hot_flat.reshape((-1, *y_shape[1:]))
+        #p_one_hot = p_one_hot_flat.reshape((-1, *y_shape[1:]))
         p_vector = np.argmax(p_one_hot, 2)
         p_strings = pp.decode_data(p_vector)
 
         # print
-        print(p_strings)
-        if len(query) > 1:
-            print(*accuracy)
+        output += [f"'{s}'" for s in p_strings]
+        print(*output, sep='\t')
 
 
 
