@@ -54,8 +54,8 @@ def process_training_data(raw_source_file):
     data['LookupDOSFilePath'] = data['LookupDOSFilePath'].str.slice(0, 44) + data['SurveyNum'].map(str) + '_' + data['LookupDOSFilePath'].str.slice(44)
 
     # drop irrelevant columns, 'FileName' 'Original_FileName'
-    data.drop('FileName', 1, inplace=True)
-    data.drop('Original_FileName', 1, inplace=True)
+    #data.drop('FileName', 1, inplace=True)
+    #data.drop('Original_FileName', 1, inplace=True)
 
     # show final structure
     print('Final structure')
