@@ -6,26 +6,32 @@ import pandas as pd
 import preprocessing as pp
 import sys, inspect
 
-def accuracy(y_true, y_pred):
-    argmax_true = tf.math.argmax(y_true)
-    argmax_pred = tf.math.argmax(y_pred)
-    match = tf.equal(argmax_true, argmax_pred)
-    match = tf.cast(match, tf.int32)
-    return tf.reduce_mean(match)
+def exact_match_accuracy(y_true, y_pred):
+    argmax_true = tf.math.argmax(y_true, axis=2)            # onehot to index               (batch, width, onehot:int) -> (batch, width:int)
+    argmax_pred = tf.math.argmax(y_pred, axis=2)            # onehot to index               (batch, width, onehot:int) -> (batch, width:int)
+    match_char = tf.math.equal(argmax_true, argmax_pred)    # match characters              (batch, width:int) -> (batch, width:bool)
+    match_word = tf.math.reduce_all(match_char, axis=1)     # require all character in sample to match      (batch, width:bool) -> (batch:bool)
+    match_int = tf.cast(match_word, tf.int32)               # bool to int                                   (batch:bool) -> (batch:int)
+    return tf.reduce_mean(match_int)                        # percentage of samples that are an exact match (batch:int) -> int
 
 #######################################################################################################################
 # Configuration
 #######################################################################################################################
 
-data_file = 'Processed 2D Files Training Data.csv'
-model_file = 'model.h5'
+# file, new|reuse, epoch
+defaults = ['model.h5', 'new', '1']
+parameters = sys.argv[1:]
+parameters += defaults[len(parameters):] # fill with defaults
 
-reuse_model = len(sys.argv) > 1 and sys.argv[1] == 'reuse'
+data_file = 'Processed 2D Files Training Data.csv'
+model_file = parameters[0]
+
+reuse_model = parameters[1] == 'reuse'
 x_cut = (slice(None), slice(0,12))
 y_cut = (slice(None), slice(0,12))
-epochs = 100
+epochs = int(parameters[2])
 embedding_size = 20
-metrics = ['mean_absolute_error', 'categorical_accuracy', 'binary_accuracy', accuracy]
+metrics = ['mean_absolute_error', 'categorical_accuracy', 'binary_accuracy', exact_match_accuracy]
 loss = 'poisson'
 
 
@@ -38,7 +44,7 @@ def main():
     # spli data into x and y as well as training and test set
     # Unique Record ID	FileName	Original_FileName	SurveyNum	SurveyName	LineName	SurveyType	PrimaryDataType	SecondaryDataType	TertiaryDataType	Quaternary	File_Range	First_SP_CDP	Last_SP_CDP	CompletionYear	TenureType	Operator Name	GSQBarcode	EnergySource	LookupDOSFilePath
 
-    (train_x, train_y), (test_x, test_y) = pp.train_test_split(data['LineName'], data['LineName'], test_frac=0.2, shuffle_before=True, shuffle_after=True)
+    (train_x, train_y), (test_x, test_y) = pp.train_test_split(data['LineName'], data['LineName'], test_frac=0.2, shuffle_before=False, shuffle_after=True)
 
     print('train_x', train_x.shape, 'train_y', train_y.shape, 'test_x', test_x.shape, 'test_y', test_y.shape, sep='\t')
 
@@ -79,41 +85,46 @@ def main():
 
     print('train_x', train_x.shape, 'train_y', train_y.shape, 'test_x', test_x.shape, 'test_y', test_y.shape, sep='\t')
 
-    if not reuse_model:
+    # create model
+    model = keras.Sequential()
 
-        # create model
-        model = keras.Sequential()
+    # embed characters into dense embedded space
+    model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))
+    model.add(keras.layers.Flatten()) # for dense DNN
 
-        # embed characters into dense embedded space
-        model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))
-        model.add(keras.layers.Flatten()) # for dense DNN
+    #model.add(keras.layers.LSTM(y_shape_ones*x_shape_char, activation='exponential', return_sequences=True, name='lr1'))
+    #model.add(keras.layers.Dense(x_shape_char*10, activation='softmax', name='li'))
+    #model.add(keras.layers.Dense(2000, activation='hard_sigmoid', name='lh1'))
+    #model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='softmax', name='lh2'))
 
-        #model.add(keras.layers.LSTM(y_shape_ones*x_shape_char, activation='exponential', return_sequences=True, name='lr1'))
-        #model.add(keras.layers.Dense(x_shape_char*10, activation='softmax', name='li'))
-        #model.add(keras.layers.Dense(2000, activation='hard_sigmoid', name='lh1'))
-        #model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='softmax', name='lh2'))
-
-        # output layer
-        #model.add(keras.layers.TimeDistributed(keras.layers.Dense(y_shape_char*y_shape_ones, activation='exponential', name='lo')))
-        model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='exponential', name='lo'))
-        
-        # reshape to one char per output
-        model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))
-
-        # top k accuracy
-        def top_k_accuracy(y_true, y_pred):
-            return keras.metrics.top_k_categorical_accuracy(y_true, y_pred, k=y_shape_char)
-
-        # loss poisson mean_squared_logarithmic_error categorical_crossentropy
-        # metrics 
-        model.compile(optimizer='adam', loss=loss, metrics=metrics)
+    # output layer
+    #model.add(keras.layers.TimeDistributed(keras.layers.Dense(y_shape_char*y_shape_ones, activation='exponential', name='lo')))
+    model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='exponential', name='lo'))
     
-    else:
-        
-        # reload model from file
-        model = keras.models.load_model(model_file)
+    # reshape to one char per output
+    model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))
 
+    # top k accuracy
+    def top_k_accuracy(y_true, y_pred):
+        return keras.metrics.top_k_categorical_accuracy(y_true, y_pred, k=y_shape_char)
+
+    # loss poisson mean_squared_logarithmic_error categorical_crossentropy
+    # metrics 
+    model.compile(optimizer='adam', loss=loss, metrics=metrics)
     
+    # if reuse is specified, the saved model is used andthe weights are applyed
+    if reuse_model:
+        model.load_weights(model_file)
+
+        # saved_model = keras.models.load_model(model_file) # reload model from file
+
+        # # if models shapes match
+        # mode_shape = tuple([x.shape for x in model.get_weights()])
+        # saved_mode_shape = tuple([x.shape for x in saved_model.get_weights()])
+        # print(mode_shape, saved_mode_shape)
+        # if mode_shape == saved_mode_shape:
+        #     model.set_weights(saved_model.get_weights())
+
 
     print(model.summary())
     model.fit(train_x, train_y, epochs=epochs)
@@ -122,7 +133,7 @@ def main():
 
 
     # save model to file
-    model.save(model_file)
+    model.save_weights(model_file)
 
     while True:
         
@@ -150,7 +161,7 @@ def main():
         output = []
         p_one_hot = model.predict(x_padded)
         if len(query) > 1:
-            output += model.evaluate(x_padded, y_one_hot)
+            output += [format(x, '.5e') for x in model.evaluate(x_padded, y_one_hot)]
             output += y_strings
 
 
