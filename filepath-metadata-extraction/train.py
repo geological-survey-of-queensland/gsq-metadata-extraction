@@ -4,7 +4,7 @@ import keras.backend as K
 import numpy as np
 import pandas as pd
 import preprocessing as pp
-import sys, inspect
+import sys, inspect, argparse
 
 # percentage of samples that exactly match
 def exact_match_accuracy(y_true, y_pred):
@@ -25,41 +25,50 @@ def top_k_accuracy(y_true, y_pred):
 
 # Unique Record ID	FileName	Original_FileName	SurveyNum	SurveyName	LineName	SurveyType	PrimaryDataType	SecondaryDataType	TertiaryDataType	Quaternary	File_Range	First_SP_CDP	Last_SP_CDP	CompletionYear	TenureType	Operator Name	GSQBarcode	EnergySource	LookupDOSFilePath
 
-parameters_bool = {k:False for k in ['-c', '-sb', '-sa']}
-parameters_str = {k:None for k in ['-f', '-x', '-y', '-e', '-b', '-a']}
-parameters = {**parameters_bool, **parameters_str}
-for k, v in zip(sys.argv[1:], sys.argv[2:]):
-    if k in parameters_bool: parameters[k] = True
-    if k in parameters_str: parameters[k] = v
+parser = argparse.ArgumentParser(description='Metadata extractor ML training')
+parser.add_argument('-r', '--resume',       action='store_true', default=False,        help='continue from the specified files model')
+parser.add_argument('-f', '--file',         action='store',      default='model.h5',   help='file to read/write model', metavar='File')
+parser.add_argument('-x',                   action='store',      default='LineName',   help='input parameter for model')
+parser.add_argument('-y',                   action='store',      default='LineName',   help='output parameter for model')
+parser.add_argument('-e', '--epochs',       action='store',      default=1, type=int,  help='number of epochs', metavar='Epochs')
+parser.add_argument('-b', '--batch',        action='store',      default=20, type=int, help='batch size', metavar='Batch')
+parser.add_argument('-a', '--architecture', action='store',      default='P-NN',       help='select architecture, view source code', metavar='Architecture')
+parser.add_argument('-s', '--shuffle',      action='store',      default=[False, True], nargs=2, type=bool, help='suffle before and/or after split', metavar=('Before','After'))
+parser.add_argument('-v', '--verbose',      action='store_true', default=False,        help='output debugging data')
+
+args = parser.parse_args()
+
+verbose = args.verbose
+def log(*l, **d): 
+    if verbose: print(*l, **d)
+    
+log(args)
 
 
 data_file = 'Processed 2D Files Training Data.csv'
-x_cut = (slice(None), slice(None))
-y_cut = (slice(None), slice(0,15))
+subset = slice(None) # only use subset of the dataset
+x_cut = (subset, slice(None))
+y_cut = (subset, slice(0,12))
 
-model_file = parameters['-f'] or 'model.h5'
-reuse_model = parameters['-c']
+model_file = args.file
+reuse_model = args.resume
 
-architecture = parameters['-a'] or 'P-NN'
+architecture = args.architecture
 embedding_size = 20
 lstm_hidden_size = embedding_size * 15
 
-epochs = int(parameters['-e'] or 1)
-batch_size = int(parameters['-b'] or 20)
+epochs = args.epochs
+batch_size = args.batch
 metrics = ['mean_absolute_error', 'categorical_accuracy', 'binary_accuracy', exact_match_accuracy]
-loss = 'mean_squared_logarithmic_error' # poisson mean_squared_logarithmic_error
+loss = 'mean_squared_logarithmic_error' # poisson mean_squared_logarithmic_error categorical_crossentropy
 
-x_name, y_name = parameters['-x'] or 'LienName', parameters['-y'] or 'LineName'
-shuffle_before, shuffle_after = parameters['-sb'], parameters['-sa']
+x_name, y_name = args.x, args.y
+shuffle_before, shuffle_after = args.shuffle
 
-print(parameters)
-
-def main():
-    """Load training data, run training and model saving process"""
+# LOAD DATA
+# ------------------------------------------------------------------------------------------------------------------------------------1
+def load_data():
     
-    # LOAD DATA
-    # ------------------------------------------------------------------------------------------------------------------------------------1
-    voc_size = pp.char_count
     data = pp.load('training_data.p')
 
     # spli data into x and y as well as training and test set
@@ -67,10 +76,21 @@ def main():
     (train_x, train_y), (test_x, test_y) = pp.train_test_split(data[x_name], data[y_name], test_frac=0.2, shuffle_before=shuffle_before, shuffle_after=shuffle_after) # split training and test
     (_, _), (showcase_x, showcase_y) = pp.train_test_split(test_x, test_y, test_frac=0.005, shuffle_before=False, shuffle_after=False) # extract small showcase subset of test
 
-    print('train_x', train_x.shape, 'train_y', train_y.shape, test_y.shape, sep='\t')
+    log('train_x', train_x.shape, 'train_y', train_y.shape, test_y.shape, sep='\t')
+
+    return train_x, train_y, test_x, test_y, showcase_x, showcase_y
+
+#def repare_data(train_x, train_y, test_x, test_y, showcase_x, showcase_y):
+
+def main():
+    """Load training data, run training and model saving process"""
+
+    train_x, train_y, test_x, test_y, showcase_x, showcase_y = load_data()
 
     # PREPARE DATA
     # ------------------------------------------------------------------------------------------------------------------------------------2
+    voc_size = pp.char_count
+
     # original size
     x_org_shape = [*train_x.shape]
     x_org_shape[0] = None
@@ -85,32 +105,22 @@ def main():
     test_y = test_y[y_cut]
     showcase_y = showcase_y[y_cut]
 
-    # train_x = np.random.uniform(low=0, high=pp.char_count, size=train_x.shape).astype(int)
-
-    #train_x = keras.utils.to_categorical(train_x, voc_size)
-    #test_x = keras.utils.to_categorical(test_x, voc_size)
-    #showcase_x = keras.utils.to_categorical(showcase_x, voc_size)
+    # output to onehot categorical encoding
     train_y = keras.utils.to_categorical(train_y, voc_size)
     test_y = keras.utils.to_categorical(test_y, voc_size)
     showcase_y = keras.utils.to_categorical(showcase_y, voc_size)
 
+    # store input and output shape
     x_shape = [*train_x.shape]
     x_shape[0] = None
     y_shape = [*train_y.shape]
     y_shape[0] = None
 
-    #[x_shape_char] = x_shape[1:]
+    # named shape attributes
     x_shape_char, x_shape_ones, *_ = x_shape[1:] + [None]
     y_shape_char, y_shape_ones, *_ = y_shape[1:] + [None]
 
-    print('train_x', train_x.shape, 'train_y', train_y.shape, sep='\t')
-
-    #train_x = train_x.reshape(train_x.shape[0], train_x.shape[1] * train_x.shape[2])
-    #test_x = test_x.reshape(test_x.shape[0], test_x.shape[1] * test_x.shape[2])
-    #train_y = train_y.reshape(train_y.shape[0], train_y.shape[1] * train_y.shape[2])
-    #test_y = test_y.reshape(test_y.shape[0], test_y.shape[1] * test_y.shape[2])
-
-    print('train_x', train_x.shape, 'train_y', train_y.shape, sep='\t')
+    log('train_x', train_x.shape, 'train_y', train_y.shape, sep='\t')
 
     # DEFINE MODEL ARCHITECTURE
     # ------------------------------------------------------------------------------------------------------------------------------------3
@@ -123,43 +133,37 @@ def main():
         model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))   # embed characters into dense embedded space
         model.add(keras.layers.Flatten())                                                                       # flatten to 1D per sample
         model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='exponential', name='lo'))           # dense layer
+        model.add(keras.layers.Dropout(0.001))                                                                  # dropout to prevent overfitting
         model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))                                           # un flatten
 
     # FF NN (Feed Forward Neural Network)
     if architecture == 'FF-NN':
+        hidden_size = (y_shape_ones*embedding_size + y_shape_char*y_shape_ones) // 2
         model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))   # embed characters into dense embedded space
         model.add(keras.layers.Flatten())                                                                       # flatten to 1D per sample
-        model.add(keras.layers.Dense(1400, activation='exponential', name='lh'))                                # dense layer
+        model.add(keras.layers.Dense(hidden_size, activation='exponential', name='lh'))                         # dense layer
+        model.add(keras.layers.Dropout(0.2))                                                                    # dropout to prevent overfitting
         model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='exponential', name='lo'))           # dense layer
         model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))                                           # un flatten
 
     # LSTM RNN (Long-Short Term Memory Recurrent Neural Network)
     if architecture == 'LSTM-RNN1':
         model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))   # embed characters into dense embedded space
-        model.add(keras.layers.LSTM(y_shape_char * y_shape_ones))                                               # lstm recurrent cell
+        model.add(keras.layers.Dropout(0.2))                                                                    # dropout to prevent overfitting
+        model.add(keras.layers.LSTM(y_shape_char * y_shape_ones, implementation=2, unroll=True))                # lstm recurrent cell
         model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))                                           # un flatten
 
     # LSTM RNN (Long-Short Term Memory Recurrent Neural Network)
     if architecture == 'LSTM-RNN2':
         model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))   # embed characters into dense embedded space
-        model.add(keras.layers.LSTM(lstm_hidden_size, return_sequences=True))                                   # lstm recurrent cell
-        model.add(keras.layers.TimeDistributed(keras.layers.Dense(y_shape_char * y_shape_ones)))                # dense combine time series into single output
+        model.add(keras.layers.Dropout(0.2))                                                                    # dropout to prevent overfitting
+        model.add(keras.layers.LSTM(lstm_hidden_size, return_sequences=True, return_state=True))                # lstm recurrent cell
+        model.add(keras.layers.Dense(y_shape_char * y_shape_ones))                                              # dense combine time series into single output
         model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))                                           # un flatten
     
-    #model.add(keras.layers.Flatten(input_shape=(x_shape_char, x_shape_ones))) # for dense DNN
-
-    #model.add(keras.layers.LSTM(y_shape_ones*x_shape_char, activation='exponential', return_sequences=True, name='lr1'))
-    #model.add(keras.layers.Dense(1000, activation='exponential', name='li', input_shape=(x_shape_char, x_shape_ones)))
-    #model.add(keras.layers.Dense(2000, activation='hard_sigmoid', name='lh1'))
-    #model.add(keras.layers.Dense(y_shape_char*y_shape_ones*2, activation='softmax', name='lh2'))
-
-    # output layer
-    #model.add(keras.layers.TimeDistributed(keras.layers.Dense(y_shape_char*y_shape_ones, activation='exponential', name='lo')))
     
-    # reshape to one char per output
-
-    # loss poisson mean_squared_logarithmic_error categorical_crossentropy
-    # metrics 
+    # COMPILE AND COMBINE WITH SAVED
+    # ------------------------------------------------------------------------------------------------------------------------------------4
     model.compile(optimizer='adam', loss=loss, metrics=metrics)
     
     # if reuse is specified, the saved model is used andthe weights are applyed
@@ -167,15 +171,15 @@ def main():
         model.load_weights(model_file)
 
 
-    # COMPILE, RUN, EVALUATE AND SAVE
-    # ------------------------------------------------------------------------------------------------------------------------------------4
+    # RUN, EVALUATE AND SAVE
+    # ------------------------------------------------------------------------------------------------------------------------------------5
     print(model.summary())
     model.fit(train_x, train_y, batch_size=batch_size, epochs=epochs)
     model.save_weights(model_file) # save model to file
 
 
     # AUTEOMATED TESTING
-    # ------------------------------------------------------------------------------------------------------------------------------------5
+    # ------------------------------------------------------------------------------------------------------------------------------------6
     p_one_hot = model.predict(showcase_x)
     p_vector = np.argmax(p_one_hot, 2)
     p_strings = pp.decode_data(p_vector)
@@ -198,7 +202,7 @@ def main():
     print(*list(zip([loss]+metrics, model.evaluate(test_x, test_y))), sep='\n', end='\n\n') # evaluate and list loss and each metric
 
     # MANUAL TESTING
-    # ------------------------------------------------------------------------------------------------------------------------------------6
+    # ------------------------------------------------------------------------------------------------------------------------------------7
     while True:
         
         # query
