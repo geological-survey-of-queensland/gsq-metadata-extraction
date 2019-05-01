@@ -31,35 +31,38 @@ parameters = sys.argv[1:]
 parameters += defaults[len(parameters):] # fill with defaults
 
 data_file = 'Processed 2D Files Training Data.csv'
-model_file = parameters[0]
-
-reuse_model = parameters[3] == 'reuse'
 x_cut = (slice(None), slice(None))
 y_cut = (slice(None), slice(0,15))
-epochs = int(parameters[4])
+
+model_file = parameters[0]
+reuse_model = parameters[3] == 'reuse'
+
 embedding_size = 20
+epochs = int(parameters[4])
+batch_size = 1
 metrics = ['mean_absolute_error', 'categorical_accuracy', 'binary_accuracy', exact_match_accuracy]
-loss = 'mean_squared_logarithmic_error'
+loss = 'mean_squared_logarithmic_error' # poisson mean_squared_logarithmic_error
 
 x_name, y_name = parameters[1:3]
+shuffle_before, shuffle_after = True, True
 
 def main():
     """Load training data, run training and model saving process"""
     
     # LOAD DATA
-    # -------------------------------------------------------------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------------------------------------------------------1
     voc_size = pp.char_count
     data = pp.load('training_data.p')
 
     # spli data into x and y as well as training and test set
 
-    (train_x, train_y), (test_x, test_y) = pp.train_test_split(data[x_name], data[y_name], test_frac=0.2, shuffle_before=False, shuffle_after=True) # split training and test
-    (_, _), (showcase_x, showcase_y) = pp.train_test_split(test_x, test_y, test_frac=0.005, shuffle_before=True, shuffle_after=True) # extract small showcase subset of test
+    (train_x, train_y), (test_x, test_y) = pp.train_test_split(data[x_name], data[y_name], test_frac=0.2, shuffle_before=shuffle_before, shuffle_after=shuffle_after) # split training and test
+    (_, _), (showcase_x, showcase_y) = pp.train_test_split(test_x, test_y, test_frac=0.005, shuffle_before=False, shuffle_after=False) # extract small showcase subset of test
 
     print('train_x', train_x.shape, 'train_y', train_y.shape, test_y.shape, sep='\t')
 
     # PREPARE DATA
-    # -------------------------------------------------------------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------------------------------------------------------2
     # original size
     x_org_shape = [*train_x.shape]
     x_org_shape[0] = None
@@ -102,18 +105,33 @@ def main():
     print('train_x', train_x.shape, 'train_y', train_y.shape, sep='\t')
 
     # DEFINE MODEL ARCHITECTURE
-    # -------------------------------------------------------------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------------------------------------------------------3
 
     # create model
     model = keras.Sequential()
+    architecture = 'P NN'
 
-    # DNN
-    model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))   # embed characters into dense embedded space
-    model.add(keras.layers.Flatten())                                                                       # flatten to 1D per sample
-    #model.add(keras.layers.Dense(1400, activation='exponential', name='lh'))           # dense layer
-    model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='exponential', name='lo'))           # dense layer
-    model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))                                           # un flatten
+    # P NN (Perceptron Neural Network)
+    if architecture == 'P NN':
+        model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))   # embed characters into dense embedded space
+        model.add(keras.layers.Flatten())                                                                       # flatten to 1D per sample
+        model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='exponential', name='lo'))           # dense layer
+        model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))                                           # un flatten
 
+    # FF NN (Feed Forward Neural Network)
+    if architecture == 'FF NN':
+        model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))   # embed characters into dense embedded space
+        model.add(keras.layers.Flatten())                                                                       # flatten to 1D per sample
+        model.add(keras.layers.Dense(1400, activation='exponential', name='lh'))                                # dense layer
+        model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='exponential', name='lo'))           # dense layer
+        model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))                                           # un flatten
+
+    # LSTM RNN (Long-Short Term Memory Recurrent Neural Network)
+    if architecture == 'LSTM RNN':
+        model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))   # embed characters into dense embedded space
+        model.add(keras.layers.Flatten())                                                                       # flatten to 1D per sample
+        model.add(keras.layers.LSTM(y_shape_char * y_shape_ones))                                               # lstm recurrent cell
+        model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))                                           # un flatten
     
     #model.add(keras.layers.Flatten(input_shape=(x_shape_char, x_shape_ones))) # for dense DNN
 
@@ -137,14 +155,14 @@ def main():
 
 
     # COMPILE, RUN, EVALUATE AND SAVE
-    # -------------------------------------------------------------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------------------------------------------------------4
     print(model.summary())
-    model.fit(train_x, train_y, epochs=epochs)
+    model.fit(train_x, train_y, batch_size=batch_size, epochs=epochs)
     model.save_weights(model_file) # save model to file
 
 
     # AUTEOMATED TESTING
-    # -------------------------------------------------------------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------------------------------------------------------5
     p_one_hot = model.predict(showcase_x)
     p_vector = np.argmax(p_one_hot, 2)
     p_strings = pp.decode_data(p_vector)
@@ -167,7 +185,7 @@ def main():
     print(*list(zip([loss]+metrics, model.evaluate(test_x, test_y))), sep='\n', end='\n\n') # evaluate and list loss and each metric
 
     # MANUAL TESTING
-    # -------------------------------------------------------------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------------------------------------------------------6
     while True:
         
         # query
