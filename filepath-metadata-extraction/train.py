@@ -25,26 +25,34 @@ def top_k_accuracy(y_true, y_pred):
 
 # Unique Record ID	FileName	Original_FileName	SurveyNum	SurveyName	LineName	SurveyType	PrimaryDataType	SecondaryDataType	TertiaryDataType	Quaternary	File_Range	First_SP_CDP	Last_SP_CDP	CompletionYear	TenureType	Operator Name	GSQBarcode	EnergySource	LookupDOSFilePath
 
-# file, x, y, new|reuse, epoch
-defaults = ['model.h5', 'LineName', 'LineName', 'new', '1']
-parameters = sys.argv[1:]
-parameters += defaults[len(parameters):] # fill with defaults
+parameters_bool = {k:False for k in ['-c', '-sb', '-sa']}
+parameters_str = {k:None for k in ['-f', '-x', '-y', '-e', '-b', '-a']}
+parameters = {**parameters_bool, **parameters_str}
+for k, v in zip(sys.argv[1:], sys.argv[2:]):
+    if k in parameters_bool: parameters[k] = True
+    if k in parameters_str: parameters[k] = v
+
 
 data_file = 'Processed 2D Files Training Data.csv'
 x_cut = (slice(None), slice(None))
 y_cut = (slice(None), slice(0,15))
 
-model_file = parameters[0]
-reuse_model = parameters[3] == 'reuse'
+model_file = parameters['-f'] or 'model.h5'
+reuse_model = parameters['-c']
 
+architecture = parameters['-a'] or 'P-NN'
 embedding_size = 20
-epochs = int(parameters[4])
-batch_size = 1
+lstm_hidden_size = embedding_size * 15
+
+epochs = int(parameters['-e'] or 1)
+batch_size = int(parameters['-b'] or 20)
 metrics = ['mean_absolute_error', 'categorical_accuracy', 'binary_accuracy', exact_match_accuracy]
 loss = 'mean_squared_logarithmic_error' # poisson mean_squared_logarithmic_error
 
-x_name, y_name = parameters[1:3]
-shuffle_before, shuffle_after = True, True
+x_name, y_name = parameters['-x'] or 'LienName', parameters['-y'] or 'LineName'
+shuffle_before, shuffle_after = parameters['-sb'], parameters['-sa']
+
+print(parameters)
 
 def main():
     """Load training data, run training and model saving process"""
@@ -109,17 +117,16 @@ def main():
 
     # create model
     model = keras.Sequential()
-    architecture = 'P NN'
 
     # P NN (Perceptron Neural Network)
-    if architecture == 'P NN':
+    if architecture == 'P-NN':
         model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))   # embed characters into dense embedded space
         model.add(keras.layers.Flatten())                                                                       # flatten to 1D per sample
         model.add(keras.layers.Dense(y_shape_char*y_shape_ones, activation='exponential', name='lo'))           # dense layer
         model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))                                           # un flatten
 
     # FF NN (Feed Forward Neural Network)
-    if architecture == 'FF NN':
+    if architecture == 'FF-NN':
         model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))   # embed characters into dense embedded space
         model.add(keras.layers.Flatten())                                                                       # flatten to 1D per sample
         model.add(keras.layers.Dense(1400, activation='exponential', name='lh'))                                # dense layer
@@ -127,10 +134,16 @@ def main():
         model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))                                           # un flatten
 
     # LSTM RNN (Long-Short Term Memory Recurrent Neural Network)
-    if architecture == 'LSTM RNN':
+    if architecture == 'LSTM-RNN1':
         model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))   # embed characters into dense embedded space
-        model.add(keras.layers.Flatten())                                                                       # flatten to 1D per sample
         model.add(keras.layers.LSTM(y_shape_char * y_shape_ones))                                               # lstm recurrent cell
+        model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))                                           # un flatten
+
+    # LSTM RNN (Long-Short Term Memory Recurrent Neural Network)
+    if architecture == 'LSTM-RNN2':
+        model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))   # embed characters into dense embedded space
+        model.add(keras.layers.LSTM(lstm_hidden_size, return_sequences=True))                                   # lstm recurrent cell
+        model.add(keras.layers.TimeDistributed(keras.layers.Dense(y_shape_char * y_shape_ones)))                # dense combine time series into single output
         model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))                                           # un flatten
     
     #model.add(keras.layers.Flatten(input_shape=(x_shape_char, x_shape_ones))) # for dense DNN
