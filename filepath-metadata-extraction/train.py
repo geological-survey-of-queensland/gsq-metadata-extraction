@@ -149,7 +149,7 @@ def main():
     # LSTM RNN (Long-Short Term Memory Recurrent Neural Network)
     if architecture == 'LSTM-RNN1':
         model.add(keras.layers.Embedding(y_shape_ones, embedding_size, name='le', input_length=x_shape_char))   # embed characters into dense embedded space
-        model.add(keras.layers.Dropout(0.2))                                                                    # dropout to prevent overfitting
+        #model.add(keras.layers.Dropout(0.2))                                                                    # dropout to prevent overfitting
         model.add(keras.layers.LSTM(y_shape_char * y_shape_ones, implementation=2, unroll=True))                # lstm recurrent cell
         model.add(keras.layers.Reshape((y_shape_char, y_shape_ones)))                                           # un flatten
 
