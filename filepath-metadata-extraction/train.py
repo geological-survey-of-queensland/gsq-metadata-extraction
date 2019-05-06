@@ -8,6 +8,19 @@ import sys, inspect, argparse
 
 # percentage of samples that exactly match
 def exact_match_accuracy(y_true, y_pred):
+    """"Compute the 'accuracy' of the prediction on a batch. 
+    Each sample is given a score of eitehr 0 or 1.
+    For each sample, a score of 1 is only awareded if and only if 
+    the prediction exactly matches the ground thruth in full.
+
+    # Arguments
+        y_true: A Tensor holding the true y values of this batch
+        y_pred: A Tensor holding the predicted y values of this batch
+
+    # Returns
+        A Tensor containing a single value that is the average 'accuracy' of this batch
+    """"
+
     argmax_true = tf.math.argmax(y_true, axis=2)            # onehot to index               (batch, width, onehot:int) -> (batch, width:int)
     argmax_pred = tf.math.argmax(y_pred, axis=2)            # onehot to index               (batch, width, onehot:int) -> (batch, width:int)
     match_char = tf.math.equal(argmax_true, argmax_pred)    # match characters              (batch, width:int) -> (batch, width:bool)
@@ -23,8 +36,10 @@ def top_k_accuracy(y_true, y_pred):
 # Configuration
 #######################################################################################################################
 
+# possible attributes to select
 # Unique Record ID	FileName	Original_FileName	SurveyNum	SurveyName	LineName	SurveyType	PrimaryDataType	SecondaryDataType	TertiaryDataType	Quaternary	File_Range	First_SP_CDP	Last_SP_CDP	CompletionYear	TenureType	Operator Name	GSQBarcode	EnergySource	LookupDOSFilePath
 
+# handle command line arguments
 parser = argparse.ArgumentParser(description='Metadata extractor ML training')
 parser.add_argument('-r', '--resume',       action='store_true', default=False,        help='continue from the specified files model')
 parser.add_argument('-f', '--file',         action='store',      default='model.h5',   help='file to read/write model', metavar='File')
@@ -36,14 +51,24 @@ parser.add_argument('-a', '--architecture', action='store',      default='P-NN',
 parser.add_argument('-s', '--shuffle',      action='store',      default=[False, True], nargs=2, type=bool, help='suffle before and/or after split', metavar=('Before','After'))
 parser.add_argument('-v', '--verbose',      action='store_true', default=False,        help='output debugging data')
 
+# process command line arguments
 args = parser.parse_args()
 
 verbose = args.verbose
 def log(*l, **d): 
+    """If the verbose variable is True, the print function is invoked with the given parameters.
+    Otherwise the log/print is suppressed.
+
+    # Arguments
+        *l: all unnamed arguments
+        **d: all named arguments
+    """
     if verbose: print(*l, **d)
-    
+
+# show how the command line arguments have been interpreted
 log(args)
 
+# set configuration variables from comamnd line arguments and constants
 
 data_file = 'Processed 2D Files Training Data.csv'
 subset = slice(None) # only use subset of the dataset
@@ -68,6 +93,18 @@ shuffle_before, shuffle_after = args.shuffle
 # LOAD DATA
 # ------------------------------------------------------------------------------------------------------------------------------------1
 def load_data():
+    """Loads the training data from a partially preprocessed pickle file.
+    And splits data into train, test and showcase subsets.
+
+    # Returns
+        train_x: the x values for training
+        train_y: the y values for training
+        test_x: the x values for testing and validation
+        test_y: the y values for testing and validation
+        showcase_x: the x values for sample outputs
+        showcase_y: the y values for sample outputs
+
+    """
     
     data = pp.load('training_data.p')
 
@@ -180,16 +217,21 @@ def main():
 
     # AUTEOMATED TESTING
     # ------------------------------------------------------------------------------------------------------------------------------------6
+    
+    # run prediction and convert output to redable strings
     p_one_hot = model.predict(showcase_x)
     p_vector = np.argmax(p_one_hot, 2)
     p_strings = pp.decode_data(p_vector)
 
+    # convert expected output (gound truth) to readable strings
     y_vector = np.argmax(showcase_y, 2)
     y_strings = pp.decode_data(y_vector)
 
+    # convert the input (x) to redable strings
     #x_vector = np.argmax(showcase_x, 2)
     x_strings = pp.decode_data(showcase_x)
 
+    # concatinate the string into a tabular format and print it
     x_strings = [s.replace('<Padding>', '') for s in x_strings]
     y_strings = [s.replace('<Padding>', '') for s in y_strings]
     p_strings = [s.replace('<Padding>', '') for s in p_strings]
@@ -198,25 +240,27 @@ def main():
 
     print(*y_p_strings, sep='\n', end='\n\n')
 
-    # accuracy on entire training set
+    # print accuracy on entire test set
     print(*list(zip([loss]+metrics, model.evaluate(test_x, test_y))), sep='\n', end='\n\n') # evaluate and list loss and each metric
 
     # MANUAL TESTING
     # ------------------------------------------------------------------------------------------------------------------------------------7
+    # allow user to input any inputs, run the prediction and print the corresponding output
     while True:
         
-        # query
+        # query user
         query = input("Input (q to exit): ")
         if query == 'q': break
         query = query.split()
 
-        # preprocess x
+        # preprocess x, preprocess user input
         x_strings = [query[0]]
         x_vector = pp.vectorize_data(x_strings)
         x_padded = pp.pad_vector_data(x_vector, pp.char_to_int['<Padding>'], width=x_org_shape[1])[x_cut]
         x_one_hot = keras.utils.to_categorical(x_padded, voc_size)
         #x_one_hot_flat = x_one_hot.reshape(-1, x_one_hot.shape[1] * x_one_hot.shape[2])
 
+        # if user also gave the expected output, preprocess it too
         if len(query) > 1:
             # preprocess y
             y_strings = [query[1]]
@@ -225,7 +269,7 @@ def main():
             y_one_hot = keras.utils.to_categorical(y_padded, voc_size)
             #y_one_hot_flat = y_one_hot.reshape(-1, y_one_hot.shape[1] * y_one_hot.shape[2])
 
-        # run
+        # run the prediction and if the expected output was given, compute accuracy
         output = []
         p_one_hot = model.predict(x_padded)
         if len(query) > 1:
@@ -233,12 +277,12 @@ def main():
             output += y_strings
 
 
-        # decode
+        # decode prediction and convert to human redable string
         #p_one_hot = p_one_hot_flat.reshape((-1, *y_shape[1:]))
         p_vector = np.argmax(p_one_hot, 2)
         p_strings = pp.decode_data(p_vector)
 
-        # print
+        # print output and accuracy if computed
         output += [f"'{s}'" for s in p_strings]
         print(*output, sep='\t')
 
