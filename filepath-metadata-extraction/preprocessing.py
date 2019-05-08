@@ -3,6 +3,7 @@ import numpy as np
 import pickle
 import math
 import re
+import keras
 
 # tokens used to communicate non character entities
 # tokens = ['<Padding>', '<Go>', '<EndOfString>', '<UnknownChar>', '<SurveyNum>', '<SurveyName>', '<LineName>', '<SurveyType>', '<PrimaryDataType>', '<SecondaryDataType>', '<TertiaryDataType>', '<Quaternary>', '<File_Range>', '<First_SP_CDP>', '<Last_SP_CDP>', '<CompletionYear>', '<TenureType>', '<Operator Name>', '<GSQBarcode>', '<EnergySource>', '<LookupDOSFilePath>', '<Source Of Data>']
@@ -23,7 +24,7 @@ def main():
     """main program to perform all of preprocessing.
     reads data, vectorizes, pads it and saves it to file"""
 
-    data = process_training_data('SHUP 2D Files Training Data.csv')
+    data = process_raw_data('SHUP 2D Files Training Data.csv')
     vectorized_data = {f: vectorize_data(data[f]) for f in data}
     padded_data = {f: pad_vector_data(vectorized_data[f], char_to_int['<Padding>']) for f in vectorized_data}
 
@@ -31,7 +32,7 @@ def main():
 
 
 
-def process_training_data(raw_source_file):
+def process_raw_data(raw_source_file):
     """clean up data to remove and change some key sapects.
     
     # Arguments
@@ -221,6 +222,61 @@ def pad_vector_data(data, pad_token, width=None):
 
     return matrix
         
+
+
+def preprocess(data, x_name='LookupDOSFilePath', y_name='LineName', x_categorical=False, y_categorical=False, epoch_size=None, x_cut_s=None, x_cut_e=None, y_cut_s=None, y_cut_e=None):
+    
+    subset = slice(None, epoch_size) # only use subset of the dataset
+    x_cut = (subset, slice(x_cut_s, x_cut_e))
+    y_cut = (subset, slice(y_cut_s, y_cut_e))
+
+    shuffle_before, shuffle_after = False, True
+    test_split_frac, showcase_split_frac = 0.2, 0.005
+
+    # spli data into x and y as well as training and test set
+    (train_x, train_y), (test_x, test_y) = train_test_split(data[x_name][subset], data[y_name][subset], test_frac=test_split_frac, shuffle_before=shuffle_before, shuffle_after=shuffle_after) # split training and test
+    (_, _), (showcase_x, showcase_y) = train_test_split(test_x, test_y, test_frac=showcase_split_frac, shuffle_before=True, shuffle_after=False) # extract small showcase subset of test
+
+    print('train_x', train_x.shape, 'train_y', train_y.shape, sep='\t')
+
+    # original size
+    x_org_shape = [*train_x.shape]
+    x_org_shape[0] = None
+    y_org_shape = [*train_y.shape]
+    y_org_shape[0] = None
+
+    # one hot encode output because the model cant do that for some reason
+    train_x = train_x[x_cut]
+    test_x = test_x[x_cut]
+    showcase_x = showcase_x[x_cut]
+    train_y = train_y[y_cut]
+    test_y = test_y[y_cut]
+    showcase_y = showcase_y[y_cut]
+
+    # input and or output to onehot categorical encoding
+    if x_categorical:
+        train_x = keras.utils.to_categorical(train_x, char_count)
+        test_x = keras.utils.to_categorical(test_x, char_count)
+        showcase_x = keras.utils.to_categorical(showcase_x, char_count)
+    if y_categorical:
+        train_y = keras.utils.to_categorical(train_y, char_count)
+        test_y = keras.utils.to_categorical(test_y, char_count)
+        showcase_y = keras.utils.to_categorical(showcase_y, char_count)
+
+    # store input and output shape
+    x_shape = [*train_x.shape]
+    x_shape[0] = None
+    y_shape = [*train_y.shape]
+    y_shape[0] = None
+
+    # named shape attributes
+    x_shape_char, x_shape_ones, *_ = x_shape[1:] + [None]
+    y_shape_char, y_shape_ones, *_ = y_shape[1:] + [None]
+
+    print('train_x', train_x.shape, 'train_y', train_y.shape, 'test_x', test_x.shape, 'test_y', test_y.shape, 'showcase_x', showcase_x.shape, 'showcase_y', showcase_y.shape, sep='\t')
+
+    return train_x, train_y, test_x, test_y, showcase_x, showcase_y, x_shape_char, x_shape_ones, y_shape_char, y_shape_ones, x_name, y_name
+
 
 
 if __name__ == "__main__": main()
