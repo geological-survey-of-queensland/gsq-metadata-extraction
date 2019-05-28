@@ -28,6 +28,8 @@ Desired attributes are:
 
 ## Subprojects
 
+A folder exists for each subproject, further README files exist in them for more information
+
 - Filepath metadata extraction: extract different metadata from the file path of each file. (Current)
 - Document metadata extraction: extract different metadata from coduments such as pdf reports.
 - Hierarchical analysis and metadata sharing: copy metadata to related files based on hierachicl structure.
@@ -50,8 +52,9 @@ Desired attributes are:
 
 | Word / Phrase | Meaning |
 |---------------|---------|
+| Sequene | a sequence of objects, ie text |
 | Temporal inputs / data | sequencial data, often of varying size |
-|  |  |
+| Latent | Hidden or internal |
 
 ## Research
 
