@@ -33,7 +33,7 @@ Extract metadata from filepaths as relevant information is often found in the fi
 
 | Word / Phrase | Meaning |
 |---------------|---------|
-| Sequene | a sequence of objects, ie text |
+| Sequence| a sequence of objects, ie text |
 | Temporal inputs / data | sequencial data, often of varying size |
 | Latent | Hidden or internal |
 
@@ -44,13 +44,13 @@ Extract metadata from filepaths as relevant information is often found in the fi
 
 ### Task Definition
 
-3 main approaches for extracting data have been proposed thus far with the option of more approaches in the future.
+3 main approaches for extracting data have been proposed thus far with the option of more in the future.
 1. |    File path metadata extraction
 2. |    Document metadata extraction – extract data from file contents
 3. |    Hierarchical metadata distribution – distribute metadata across relevant files based on their hierarchical position in the current file structure.
 
-Stage 1 only address the first approach; file path metadata extraction. The goal is to develop a machine learned model that is able to extract at least some useful metadata about a file from its file path (complete file path not just the filename) and demonstrate the viability of using machine learning for this purpose. This stage does not concern itself with creating automated process that actually process live data and work into the new system.
-The training data consists of a cvs file containing about 23900 samples. The file contains the following columns: 
+Stage 1 only addresses the first approach; file path metadata extraction. The goal is to develop a machine learned model that is able to extract at least some useful metadata about a file from its file path (complete file path not just the filename) and demonstrate the viability of using machine learning for this purpose. This stage does not concern itself with creating an automated process that actually processes live data and work into the new system.
+The training data consists of a csv file containing about 23900 samples. The file contains the following columns: 
 
 | Used | Column name | Data type | example |
 |------|-------------|-----------|---------|
@@ -87,9 +87,9 @@ The type of processing is formally categorized as a sequence to sequence, meanin
 
 The process of can be broken down into 3 distinct stages: pre-processing the data, embedding and the core model. 
 
-The pre-processing is responsible with loading in the training data and processing it into a machine learning compatible format. This includes converting the textual data to vector representations, shuffling the dataset, and splitting the set into various desired subsets. In this step each character is converted into a vector and the entire dimensionality of the data set is normalized. The resulting vectors need to be of equal dimensionality regardless of sequence length. This is important as NNs are only able to train from equally sized numerical vector data.
+The pre-processing is responsible for loading in the training data and processing it into a machine learning compatible format. This includes converting the textual data to vector representations, shuffling the dataset, and splitting the set into various desired subsets. In this step each character is converted into a vector and the entire dimensionality of the data set is normalized. The resulting vectors need to be of equal dimensionality regardless of sequence length. This is important as NNs are only able to train from equally sized numerical vector data.
 
-In the next stage the training data is embedding into a denser vector space. As mentioned above the textual data is converted into a vector format on a character basis. Embedding is a form of dimensionality reduction. This process learns a transformation of the original vector representation into dense vector space. The embedding process learns both the transformation to encode the vector into the dense space as well as the transformation to decode it again. Embedding is applied twice, first to transform characters into a dense vector space and then to transforms sequences of characters or ‘words’ into even denser vector representations. After the model has processed the embedded training data its result will be decoded back into the standard vector representation on a character level using the decoder learned in this step. Embedding the data significantly increases the models accuracy and training speed.
+In the next stage the training data is embedded into a denser vector space. As mentioned above the textual data is converted into a vector format on a character basis. Embedding is a form of dimensionality reduction. This process learns a transformation of the original vector representation into dense vector space. The embedding process learns both the transformation to encode the vector into the dense space as well as the transformation to decode it again. Embedding is applied twice, first to transform characters into a dense vector space and then to transforms sequences of characters or ‘words’ into even denser vector representations. After the model has processed the embedded training data its result will be decoded back into the standard vector representation on a character level using the decoder learned in this step. Embedding the data significantly increases the models accuracy and training speed.
 
 The final stage is the core model of the processing pipeline. It is given embedded training data in embedded form, performs processing and returns a result in embedded form. It is comprised of an encoder and a decoder. Because input is a sequence, the encoder is a RNN that uses a single LSTM cell to encode the sequences or fords into an internal vector representation. The LSTM cell receives one embedded ‘word’ at a time and updates its internal state after each step. The output of the LSTM cell is a fixed sized vector after every word has been processed. A dense layer then decodes this output into the embedded word vector representation. Note that the decoder produces a fixed size vector and not a sequence, the program then simply removes training padding tokens. 
 
@@ -99,7 +99,7 @@ During the steps of processing the data in transformed into a number of differen
 
 The raw training data is provided in the form of a csv file with a column for each of the feature of the data as described in Task Definition. During research the ‘LookupDOSFilePath’ and ‘FileName’ columns are used for inputs, the former is very similar to the real input that this model might operate on, the latter is a shorter substring of the former that is useful in testing models with shorter training times. Each field in the csv file is a variable length string or empty. 
 
-After pre-processing the data is contained in a dictionary that maps column names onto multidimensional arrays of onehot encoded vector representations the characters:
+After pre-processing the data is contained in a dictionary that maps column names onto multidimensional arrays of onehot encoded vector representations of the characters:
 
 ```
 {
@@ -130,14 +130,14 @@ After step 3 the data looks as follow:
   …
 }
 
-After step 4 some of the column’s strings are split into a list of ‘words’ at punctuation marks and symbols and the punctuations or symbols become a word themselves as well. This is only applied to some columns where it is reasonable.
+After step 4 some of the column’s strings are split into a list of ‘words’ at punctuation marks and symbols. The punctuations marks or symbols become words as well. This is only applied to some columns where it is reasonable.
 
 ```
 ‘DIR/FILE.EXT’ -> [ ‘DIR’, ‘/’, ‘FILE’, ‘.’, ‘EXT’ ]
 string -> list(string)
 ```
 
-After step 5 strings have been converted into lists f integers:
+After step 5 strings have been converted into lists of integers:
 
 ```
 ‘DIR’ -> [ 4, 9, 18 ]
@@ -199,7 +199,7 @@ For a character set of around 50 characters and tokens a hidden size of 10 is th
 
 ##### Word Embedding
 
-The word embedding learns a latent vector space transformation for arrays of embedded characters. The character encoders and decoders are copied from the first character embedding model. But the character encoder and decoder layers are still trainable. Therefore this step trains a new character encoder/decoders as well as the word encoders/decoders. Training the character and word encoder together has shown to perform significantly better than fixing the character embedding layers. Setting the character weights to the pertained character character’s model speeds up the training of this setp.
+The word embedding learns a latent vector space transformation for arrays of embedded characters. The character encoders and decoders are copied from the first character embedding model. But the character encoder and decoder layers are still trainable. Therefore this step trains a new character encoder/decoders as well as the word encoders/decoders. Training the character and word encoder together has been shown to perform significantly better than fixing the character embedding layers. Setting the character weights to the pretrained character character’s model speeds up the training of this setp.
 Model summary:
 
 | Purpose | Type | Output | Activation |
@@ -214,15 +214,15 @@ Model summary:
 
 Hidden layer size (latent variable dimensionality):
 
-For a words with around 20 characters (encoded) a hidden size of 35 is the smallest size that effectively and accurately encodes the information.
+For a word with around 20 characters (encoded) a hidden size of 35 is the smallest size that effectively and accurately encodes the information.
 
 ##### Core/Overal Model
 
 Overall the model performs as follow: the character encoder encodes each character individually, then characters of a word are concatenated and each word is encoded individually. The LSTM then encodes the sequence of word vectors into a vector representing the entire input. This is then decoded into the encoded words. Each word is decoded into encoded characters and each encoded character is decoded into the onehot character vector.
 
-The weights for the character and word encoders and decoders are copied from the pre-trained word embedding’s.
+The weights for the character and word encoders and decoders are copied from the pre-trained word embeddings.
 
-The core is comprised of a LSTM cell and a dense network. The LSTM cells is given the array of encoded word vectors and processes them sequentially. After each word vector it updates its internal state and once all words have been processed it outputs its hidden state. The dense layer then decodes the hidden state into an array of word vectors. The hidden size should a few time larger than the embedded size of the output so that I can contain the information of the output as well as some information regarding the current state of processing.
+The core is comprised of a LSTM cell and a dense network. The LSTM cells are given the array of encoded word vectors and processes them sequentially. After each word vector it updates its internal state and once all words have been processed it outputs its hidden state. The dense layer then decodes the hidden state into an array of word vectors. The hidden size should be a few time larger than the embedded size of the output so that it can contain the information of the output as well as some information regarding the current state of processing.
 
 The total model architecture including all levels of encoders and decoders is the following:
 
