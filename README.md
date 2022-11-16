@@ -95,3 +95,11 @@ DNN are known for better processing of more complex data and thus is likly to in
 | convolutional NN |  | Convulution does not apply to text based data |
 
 ~~In conclusion we will initially attempt to implement and test a Deep Rrecurrent Neural Network (DRNN) and possibly compare it to RNN and DNN implementation depending on performance results.~~
+
+
+## Contacts
+**Geoscience Information Team**,
+Geological Survey of Queensland,
+Department of Resources,
+Brisbane, QLD, Australia,
+<geological_info@resources.qld.gov.au>
